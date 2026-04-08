@@ -4,10 +4,6 @@
         "sleep": 1
     },
     {
-        "process": "open_inbox",
-        "sleep": 2
-    },
-    {
         "process": "loop",
         "check": "is_empty_folder",
         "limit_loop": 2,

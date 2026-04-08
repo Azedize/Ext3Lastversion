@@ -3,7 +3,7 @@ let id = 0;
 const gmail_process = {
     "login": [
 
-        {"action": "check_if_exist", "xpath":"//a[starts-with(@href,'https://accounts.google.com/AccountChooser')] | //input[@id='identifierId'] | //div[@id='gbwa'] | //div[@id='main-message']", "wait": 6, "sleep": 0,
+        {"action": "check_if_exist", "xpath":"//a[starts-with(@href,'https://accounts.google.com/AccountChooser')] | //input[@id='identifierId'] | //div[@id='gbwa'] | //div[@id='main-message']", "wait": 96, "sleep":10,
             //div[@id='gbwa']  deja connecter sur boi de reception 
             "sub_action": [
                 {"action": "check_if_exist", "xpath":"//a[starts-with(@href,'https://accounts.google.com/AccountChooser')]", "wait": 3, "sleep": 0,

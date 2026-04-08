@@ -89,9 +89,9 @@ window.randomComments = randomComments;
 
 
 async function ReportingActionsV2(actions, process) {
-    Logger.groupCollapsed(`ReportingActionsV2: ${process || "default"}`, "ReportingActionsV2");
+    const processName = `ReportingActionsV2-${process || "default"}`;
+    const groupOpened = Logger.startProcessGroup(processName, "ReportingActionsV2");
     Logger.timeStart("ReportingActionsV2", "ReportingActionsV2");
-    Logger.info("Démarrage ReportingActionsV2", { process, actionsCount: actions?.length }, "ReportingActionsV2");
 
     let completedActions = await new Promise((resolve) => {
         chrome.storage.local.get("completedActions", (result) => {
@@ -99,7 +99,13 @@ async function ReportingActionsV2(actions, process) {
         });
     });
     let currentProcessCompleted = completedActions[process] || [];
-    Logger.info("Actions déjà complétées chargées", { process, currentProcessCompletedCount: currentProcessCompleted.length }, "ReportingActionsV2");
+
+    if (groupOpened) {
+        Logger.scenario("Scénario chargé", actions, "ReportingActionsV2");
+        Logger.data(`Actions déjà complétées: ${currentProcessCompleted.length} actions`, currentProcessCompleted, "ReportingActionsV2");
+    } else {
+        Logger.info(`Continuation du process: ${processName}`, { actionsCount: actions?.length }, "ReportingActionsV2");
+    }
 
     let normalize = (obj) => {
         let sortedKeys = Object.keys(obj).sort();
@@ -137,7 +143,8 @@ async function ReportingActionsV2(actions, process) {
     };
 
     for (const action of actions) {
-        Logger.info("Traitement action", { action: action.action, process }, "ReportingActionsV2");
+        Logger.groupCollapsed(`🔧 Action: ${action.action}${action.xpath ? ` (${action.xpath})` : ''}`, "ReportingActionsV2");
+        Logger.timeStart(`Action-${action.action}`, "ReportingActionsV2");
 
         if (process !== "youtube_Shorts") {
             if (isActionCompleted(action)) {
@@ -154,11 +161,11 @@ async function ReportingActionsV2(actions, process) {
 
         try {
             if (action.action === "check_if_exist") {
-                Logger.debug("Vérification existence d'élément", { xpath: action.xpath, wait: action.wait }, "ReportingActionsV2");
+                Logger.debug(`Vérification existence d'élément: "${action.xpath}" (wait: ${action.wait}s)`, { xpath: action.xpath, wait: action.wait }, "ReportingActionsV2");
                 let elementExists = await waitForElement(action.xpath, action.wait);
 
                 if (elementExists) {
-                    Logger.success("Élément trouvé", { xpath: action.xpath }, "ReportingActionsV2");
+                    Logger.success(`Élément trouvé: "${action.xpath}"`, { xpath: action.xpath }, "ReportingActionsV2");
 
                     if (action.type) {
                         Logger.step("Téléchargement déclenché", { type: action.type }, "ReportingActionsV2");
@@ -170,7 +177,7 @@ async function ReportingActionsV2(actions, process) {
                         await ReportingActionsV2(action.sub_action, process);
                     }
                 } else {
-                    Logger.warning("Élément introuvable", { xpath: action.xpath }, "ReportingActionsV2");
+                    Logger.warning(`Élément introuvable: "${action.xpath}"`, { xpath: action.xpath }, "ReportingActionsV2");
                 }
 
                 if (action.sleep) {
@@ -211,9 +218,8 @@ async function ReportingActionsV2(actions, process) {
         }
     }
 
-    Logger.success(`ReportingActionsV2 terminé`, { process }, "ReportingActionsV2");
     Logger.timeEnd("ReportingActionsV2", "ReportingActionsV2");
-    Logger.groupEnd();
+    Logger.endProcessGroup(processName, "ReportingActionsV2");
     return true;
 }
 

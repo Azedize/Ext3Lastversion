@@ -195,11 +195,22 @@ const extractReplyMessageValue = (scenario) => {
 // └─────────────────────────────┘
 
 const createPopup = async (message) => {
-    Logger.groupCollapsed("createPopup", "createPopup");
+    const processName = "createPopup";
+    const groupOpened = Logger.startProcessGroup(processName, "createPopup");
     Logger.timeStart("createPopup", "createPopup");
 
     try {
-        Logger.info("Initialisation du processus", null, "createPopup");
+        if (groupOpened) {
+            Logger.info("Initialisation du processus", null, "createPopup");
+
+            // --- Afficher les données déjà enregistrées ---
+            Logger.step("Vérification des données persistées", null, "createPopup");
+            const allStoredData = await new Promise(resolve => {
+                chrome.storage.local.get(null, (data) => resolve(data));
+            });
+            Logger.data(`Données localStorage: ${Object.keys(allStoredData).length} clés`, allStoredData, "createPopup");
+            Logger.inspect(allStoredData, "📦 État complet du localStorage", "createPopup");
+        }
         await sleep(1000);
 
         // --- Charger le scénario ---
@@ -225,7 +236,8 @@ const createPopup = async (message) => {
         Logger.step("Chargement des données du process", null, "createPopup");
         const processData = message && Object.keys(message).length > 0 ? message :
             await new Promise(resolve => chrome.storage.local.get("startProcessData", res => resolve(res.startProcessData || {})));
-        Logger.data("Données du process", processData, "createPopup");
+        Logger.data(`Données du process: ${Object.keys(processData).length} propriétés${processData.profile_email ? ` | Email: ${processData.profile_email}` : ''}`, processData, "createPopup");
+        Logger.inspect(processData, "📋 DÉTAIL COMPLET DES DONNÉES DU PROCESS", "createPopup");
 
         // --- Enregistrer l'email si présent ---
         if (processData.profile_email) {
@@ -234,7 +246,18 @@ const createPopup = async (message) => {
         }
 
         const ispProcess = gmail_process || {};
-        Logger.data("Process ISP", ispProcess, "createPopup");
+        Logger.data(`Process ISP: ${Object.keys(ispProcess).length} propriétés`, ispProcess, "createPopup");
+
+        // ========================================
+        // AVANT REMPLACEMENT DES PLACEHOLDERS
+        // ========================================
+        Logger.groupCollapsed("📊 AVANT REMPLACEMENT DES PLACEHOLDERS", "createPopup");
+        Logger.timeStart("PlaceholderBefore", "createPopup");
+        Logger.info("État du processData avant remplacement", null, "createPopup");
+        Logger.inspect(processData, "processData - Clés disponibles", "createPopup");
+        Logger.info("État du ispProcess avant remplacement", null, "createPopup");
+        Logger.inspect(ispProcess, "ispProcess - Structure complète", "createPopup");
+        Logger.groupEnd();
 
         // --- Remplacement des placeholders ---
         Logger.step("Remplacement des placeholders", null, "createPopup");
@@ -256,6 +279,17 @@ const createPopup = async (message) => {
         };
         replacePlaceholders(ispProcess);
         Logger.success("Placeholders remplacés", null, "createPopup");
+
+        // ========================================
+        // APRÈS REMPLACEMENT DES PLACEHOLDERS
+        // ========================================
+        Logger.groupCollapsed("📊 APRÈS REMPLACEMENT DES PLACEHOLDERS", "createPopup");
+        Logger.timeStart("PlaceholderAfter", "createPopup");
+        Logger.info("État du ispProcess après remplacement", null, "createPopup");
+        Logger.inspect(ispProcess, "ispProcess - Structure modifiée", "createPopup");
+        Logger.info("Comparaison avant/après: les valeurs __XXX__ doivent être remplacées", null, "createPopup");
+        Logger.timeEnd("PlaceholderAfter", "createPopup");
+        Logger.groupEnd();
 
         // --- Récupérer les actions terminées ---
         Logger.step("Récupération des actions terminées", null, "createPopup");
@@ -283,7 +317,7 @@ const createPopup = async (message) => {
     }
 
     Logger.timeEnd("createPopup", "createPopup");
-    Logger.groupEnd();
+    Logger.endProcessGroup(processName, "createPopup");
 };
 
 
@@ -351,12 +385,32 @@ let saveLocationData = null;
 // retourne : nombre total d'emails/messages traités
 // =========================================================
 async function ReportingProcess(scenario, ispProcess) {
-    Logger.groupCollapsed("ReportingProcess", "ReportingProcess");
+    const processName = "ReportingProcess";
+    const groupOpened = Logger.startProcessGroup(processName, "ReportingProcess");
     Logger.timeStart("ReportingProcess", "ReportingProcess");
-    Logger.info("Démarrage du processus de reporting", { scenarioCount: scenario.length }, "ReportingProcess");
+
+    if (groupOpened) {
+        Logger.info("Démarrage du processus de reporting", { scenarioCount: scenario.length }, "ReportingProcess");
+
+        // ========================================
+        // DONNÉES D'ENTRÉE DU PROCESSUS
+        // ========================================
+        Logger.groupCollapsed("📊 DONNÉES D'ENTRÉE DU PROCESSUS", "ReportingProcess");
+        Logger.timeStart("InputData", "ReportingProcess");
+        Logger.info("Paramètres d'entrée détaillés", null, "ReportingProcess");
+        Logger.inspect(scenario, "scenario - Structure complète du scénario", "ReportingProcess");
+        Logger.inspect(ispProcess, "ispProcess - Données ISP complètes", "ReportingProcess");
+        Logger.info("Statistiques d'entrée", {
+            scenarioLength: scenario.length,
+            ispProcessKeys: Object.keys(ispProcess).length,
+            ispProcessKeysList: Object.keys(ispProcess)
+        }, "ReportingProcess");
+        Logger.timeEnd("InputData", "ReportingProcess");
+        Logger.groupEnd();
+    }
 
     let messagesProcessed = 0;
-    let pageCount = 0;
+    // let pageCount = 0;
     let stopAllProcessing = false;
 
     for (const process of scenario) {
@@ -368,6 +422,7 @@ async function ReportingProcess(scenario, ispProcess) {
         Logger.groupCollapsed(`Processus ${process.process}`, "ReportingProcess");
         Logger.timeStart(`Process-${process.process}`, "ReportingProcess");
         Logger.info(`Traitement du processus: ${process.process}`, process, "ReportingProcess");
+        Logger.inspect(process, "Détails complets du process", "ReportingProcess");
 
         try {
             const currentURL = window.location.href;
@@ -375,8 +430,9 @@ async function ReportingProcess(scenario, ispProcess) {
 
             if ((currentURL.includes("https://mail.google.com/mail") ||
                  currentURL.includes("https://myaccount.google.com/?pli=") ||
-                 currentURL.startsWith("https://myaccount.google.com/")) &&
-                process.process === "login") {
+                currentURL.startsWith("https://myaccount.google.com/")) && process.process === "login") {
+                
+                Logger.inspect(process, "Processus login ignoré (déjà connecté)", "ReportingProcess");
                 Logger.info("Processus login ignoré (déjà connecté)", null, "ReportingProcess");
                 Logger.timeEnd(`Process-${process.process}`, "ReportingProcess");
                 Logger.groupEnd();
@@ -611,7 +667,7 @@ async function ReportingProcess(scenario, ispProcess) {
 
     Logger.success("Fin du processus de reporting", { messagesProcessed }, "ReportingProcess");
     Logger.timeEnd("ReportingProcess", "ReportingProcess");
-    Logger.groupEnd();
+    Logger.endProcessGroup(processName, "ReportingProcess");
     return messagesProcessed;
 }
 
@@ -628,7 +684,10 @@ let processAlreadyRunning = false;
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     Logger.groupCollapsed("Message Background Reçu", "chrome.runtime.onMessage");
     Logger.timeStart("MessageBackground", "chrome.runtime.onMessage");
-    Logger.info("Nouveau message background reçu", { action: message.action, sender: sender?.tab?.id }, "chrome.runtime.onMessage");
+    Logger.info("Nouveau message background reçu", null, "chrome.runtime.onMessage");
+    Logger.inspect(message, "Message reçu (détail)", "chrome.runtime.onMessage");
+    Logger.inspect(sender, "Sender du message (détail)", "chrome.runtime.onMessage");
+    Logger.info("Résumé du message", { action: message?.action, senderTabId: sender?.tab?.id, senderUrl: sender?.tab?.url || sender?.url }, "chrome.runtime.onMessage");
 
     try {
         // === Fermeture d'onglet terminée ===

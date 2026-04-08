@@ -6,158 +6,224 @@
 // =========================================================
 
 const redirectUrls = [
-  "https://myaccount.google.com/interstitials/birthday",
-  "https://gds.google.com/web/recoveryoptions",
-  "https://gds.google.com/web/homeaddress",
+    "https://myaccount.google.com/interstitials/birthday",
+    "https://gds.google.com/web/recoveryoptions",
+    "https://gds.google.com/web/homeaddress",
 ];
 
 const Logger = {
-  levels: {
-    info: { icon: "ℹ️", method: "log", style: "color:#1a73e8; background:#e8f0fe; padding:2px 6px; border-radius:4px;" },
-    success: { icon: "✅", method: "log", style: "color:#0f9d58; background:#e6f4ea; padding:2px 6px; border-radius:4px;" },
-    warning: { icon: "⚠️", method: "warn", style: "color:#d97706; background:#fffbeb; padding:2px 6px; border-radius:4px;" },
-    error: { icon: "❌", method: "error", style: "color:#b00020; background:#fce8e6; padding:2px 6px; border-radius:4px;" },
-    debug: { icon: "🐛", method: "debug", style: "color:#5f259f; background:#f3e8ff; padding:2px 6px; border-radius:4px;" },
-  },
+    levels: {
+        info: { icon: "ℹ️", method: "log", style: "color:#1a73e8; background:#e8f0fe; padding:2px 6px; border-radius:4px;" },
+        success: { icon: "✅", method: "log", style: "color:#0f9d58; background:#e6f4ea; padding:2px 6px; border-radius:4px;" },
+        warning: { icon: "⚠️", method: "warn", style: "color:#d97706; background:#fffbeb; padding:2px 6px; border-radius:4px;" },
+        error: { icon: "❌", method: "error", style: "color:#b00020; background:#fce8e6; padding:2px 6px; border-radius:4px;" },
+        debug: { icon: "🐛", method: "log", style: "color:#111111; background:#eef2ff; padding:2px 6px; border-radius:4px; font-weight:600;" },
+    },
 
-  timestamp() {
-    return new Date().toISOString();
-  },
+    // Gestion des groupes parents actifs pour éviter les duplications
+    activeGroups: new Set(),
 
-  formatContext(context) {
-    return context ? ` [${context}]` : "";
-  },
+    timestamp() {
+        return new Date().toISOString();
+    },
 
-  formatHeader(level, context) {
-    const meta = `${this.levels[level].icon} ${level.toUpperCase()}${this.formatContext(context)}`;
-    return `%c${meta}%c ${this.timestamp()}`;
-  },
+    formatContext(context) {
+        return context ? ` [${context}]` : "";
+    },
 
-  log(level, message, data, context) {
-    if (!this.levels[level]) level = "info";
-    const { method, style } = this.levels[level];
-    const header = this.formatHeader(level, context);
-    const payload = [header, style, "color:#999; font-size:0.85em;"];
-    if (message !== undefined && message !== null) payload.push(message);
-    if (data !== undefined && data !== null) payload.push(data);
-    console[method](...payload);
-  },
+    formatHeader(level, context) {
+        const meta = `${this.levels[level].icon} ${level.toUpperCase()}${this.formatContext(context)}`;
+        return `%c${meta}%c ${this.timestamp()}`;
+    },
 
-  info(message, data, context) {
-    this.log("info", message, data, context);
-  },
-  success(message, data, context) {
-    this.log("success", message, data, context);
-  },
-  warning(message, data, context) {
-    this.log("warning", message, data, context);
-  },
-  error(message, data, context) {
-    this.log("error", message, data, context);
-  },
-  debug(message, data, context) {
-    this.log("debug", message, data, context);
-  },
+    log(level, message, data, context) {
+        if (!this.levels[level]) level = "info";
+        const { method, style } = this.levels[level];
+        const header = this.formatHeader(level, context);
+        const payload = [header, style, "color:#999; font-size:0.85em;"];
+        if (message !== undefined && message !== null) payload.push(message);
+        if (data !== undefined && data !== null) payload.push(data);
+        console[method](...payload);
+    },
 
-  groupCollapsed(title, context) {
-    console.groupCollapsed(`%c${this.levels.debug.icon} ${title}${this.formatContext(context)}`,
-      "color:#3c4043; font-weight:700; font-size:1em;");
-  },
+    info(message, data, context) {
+        this.log("info", message, data, context);
+    },
+    success(message, data, context) {
+        this.log("success", message, data, context);
+    },
+    warning(message, data, context) {
+        this.log("warning", message, data, context);
+    },
+    error(message, data, context) {
+        this.log("error", message, data, context);
+    },
+    debug(message, data, context) {
+        this.log("debug", message, data, context);
+    },
 
-  group(title, context) {
-    console.group(`%c${title}${this.formatContext(context)}`,
-      "color:#202124; font-weight:700; font-size:1em;");
-  },
+    groupCollapsed(title, context) {
+        console.groupCollapsed(`%c${this.levels.debug.icon} ${title}${this.formatContext(context)}`,
+        "color:#111111; background:#eef2ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
+    },
 
-  groupEnd() {
-    console.groupEnd();
-  },
+    group(title, context) {
+        console.group(`%c${title}${this.formatContext(context)}`,
+        "color:#111111; background:#f1f5ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
+    },
 
-  table(label, data, context) {
-    this.groupCollapsed(`📊 ${label}${Array.isArray(data) ? ` (${data.length} items)` : ""}` , context);
-    if (Array.isArray(data) && data.length === 0) {
-      this.warning(`Empty array: ${label}`, data, context);
+    groupEnd() {
+        console.groupEnd();
+    },
+
+    table(label, data, context) {
+        this.groupCollapsed(`📊 ${label}${Array.isArray(data) ? ` (${data.length} items)` : ""}` , context);
+        if (Array.isArray(data) && data.length === 0) {
+        this.warning(`Empty array: ${label}`, data, context);
+        }
+        if (Array.isArray(data) || this.isPlainObject(data)) {
+        console.table(data);
+        } else {
+        this.warning(`Unable to table() non-table data for ${label}`, data, context);
+        }
+        this.groupEnd();
+    },
+
+    inspect(value, label = "Value", context) {
+        if (this.isEmpty(value) && value !== Object(value)) {
+        this.warning(`${label} is empty or invalid`, value, context);
+        return;
+        }
+        if (Array.isArray(value)) {
+        this.table(label, value, context);
+        return;
+        }
+        if (value !== null && typeof value === "object") {
+        this.groupCollapsed(`📦 ${label}`, context);
+        console.dir(value, { depth: null });
+        this.groupEnd();
+        return;
+        }
+        this.info(`${label}:`, value, context);
+    },
+
+    isEmpty(value) {
+        return value === null || value === undefined || value === "" ||
+        (typeof value === "string" && value.trim() === "") ||
+        (Array.isArray(value) && value.length === 0) ||
+        (this.isPlainObject(value) && Object.keys(value).length === 0);
+    },
+
+    isPlainObject(value) {
+        return Boolean(value) && typeof value === "object" && value.constructor === Object;
+    },
+
+    timeStart(label, context) {
+        console.time(`${label}${this.formatContext(context)}`);
+    },
+
+    timeEnd(label, context) {
+        console.timeEnd(`${label}${this.formatContext(context)}`);
+    },
+
+    action(message, data, context) {
+        this.groupCollapsed(`🧭 ACTION: ${message}`, context);
+        if (data !== undefined && data !== null) {
+        console.table([data]);
+        }
+        this.groupEnd();
+    },
+
+    element(message, data, context) {
+        this.groupCollapsed(`🔎 ELEMENT: ${message}`, context);
+        if (data !== undefined && data !== null) {
+            console.table([data]);
+        }
+        this.groupEnd();
+    },
+
+    scenario(message, data, context) {
+        this.groupCollapsed(`📂 SCENARIO: ${message}`, context);
+        if (data !== undefined && data !== null) {
+            console.table(Array.isArray(data) ? data : [data]);
+        }
+        this.groupEnd();
+    },
+
+    data(message, data, context) {
+        this.groupCollapsed(`📦 DATA: ${message}`, context);
+        if (data !== undefined && data !== null) {
+        console.dir(data, { depth: null });
+        }
+        this.groupEnd();
+    },
+
+    step(message, data, context) {
+        this.info(`➡️ ${message}`, data, context);
+    },
+
+    // Nouvelles méthodes pour différencier les états des actions
+    completed(message, data, context) {
+        console.groupCollapsed(`%c✅ COMPLETED: ${message}${this.formatContext(context)}`,
+            "color:#0f9d58; background:#e6f4ea; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
+        if (data !== undefined && data !== null) {
+            console.table([data]);
+        }
+        this.groupEnd();
+    },
+
+    processing(message, data, context) {
+        // Détection si c'est une action déjà traitée pour changer la couleur
+        const isAlreadyProcessed = message.includes('✅ DÉJÀ TRAITÉE');
+        const backgroundColor = isAlreadyProcessed ? '#b00020' : '#1a73e8'; // Rouge pour déjà traité, bleu sinon
+        const textColor = isAlreadyProcessed ? '#ffffff' : '#ffffff'; // Blanc dans les deux cas
+
+        console.groupCollapsed(`%c🔄 PROCESSING: ${message}${this.formatContext(context)}`,
+            `color:${textColor}; background:${backgroundColor}; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;`);
+        if (data !== undefined && data !== null) {
+            console.table([data]);
+        }
+        this.groupEnd();
+    },
+
+    upcoming(message, data, context) {
+        console.groupCollapsed(`%c⏳ À TRAITER: ${message}${this.formatContext(context)}`,
+            "color:#666666; background:#f5f5f5; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
+        if (data !== undefined && data !== null) {
+            console.table([data]);
+        }
+        this.groupEnd();
+    },
+
+    // Gestion des groupes parents pour éviter les duplications
+    startProcessGroup(processName, context) {
+        const groupKey = `${processName}-${context || 'default'}`;
+        if (!this.activeGroups.has(groupKey)) {
+            this.activeGroups.add(groupKey);
+            console.group(`%c🚀 PROCESS: ${processName}${this.formatContext(context)}`,
+                "color:#ffffff; background:#1a73e8; font-weight:700; font-size:1.1em; padding:4px 8px; border-radius:6px; border:2px solid #0d47a1;");
+            this.info(`Début du process: ${processName}`, null, context);
+            return true; // Groupe ouvert
+        }
+        return false; // Groupe déjà ouvert
+    },
+
+    endProcessGroup(processName, context) {
+        const groupKey = `${processName}-${context || 'default'}`;
+        if (this.activeGroups.has(groupKey)) {
+            this.success(`Fin du process: ${processName}`, null, context);
+            console.groupEnd();
+            this.activeGroups.delete(groupKey);
+            return true; // Groupe fermé
+        }
+        return false; // Groupe pas trouvé
+    },
+
+    // Vérifier si un groupe parent est actif
+    isProcessGroupActive(processName, context) {
+        const groupKey = `${processName}-${context || 'default'}`;
+        return this.activeGroups.has(groupKey);
     }
-    if (Array.isArray(data) || this.isPlainObject(data)) {
-      console.table(data);
-    } else {
-      this.warning(`Unable to table() non-table data for ${label}`, data, context);
-    }
-    this.groupEnd();
-  },
-
-  inspect(value, label = "Value", context) {
-    if (this.isEmpty(value)) {
-      this.warning(`${label} is empty or invalid`, value, context);
-      return;
-    }
-    if (Array.isArray(value)) {
-      this.table(label, value, context);
-      return;
-    }
-    if (this.isPlainObject(value)) {
-      this.groupCollapsed(`📦 ${label}`, context);
-      console.dir(value, { depth: null });
-      this.groupEnd();
-      return;
-    }
-    this.info(`${label}:`, value, context);
-  },
-
-  isEmpty(value) {
-    return value === null || value === undefined || value === "" ||
-      (typeof value === "string" && value.trim() === "") ||
-      (Array.isArray(value) && value.length === 0) ||
-      (this.isPlainObject(value) && Object.keys(value).length === 0);
-  },
-
-  isPlainObject(value) {
-    return Boolean(value) && typeof value === "object" && value.constructor === Object;
-  },
-
-  timeStart(label, context) {
-    console.time(`${label}${this.formatContext(context)}`);
-  },
-
-  timeEnd(label, context) {
-    console.timeEnd(`${label}${this.formatContext(context)}`);
-  },
-
-  action(message, data, context) {
-    this.groupCollapsed(`🧭 ACTION: ${message}`, context);
-    if (data !== undefined && data !== null) {
-      console.table([data]);
-    }
-    this.groupEnd();
-  },
-
-  element(message, data, context) {
-    this.groupCollapsed(`🔎 ELEMENT: ${message}`, context);
-    if (data !== undefined && data !== null) {
-      console.table([data]);
-    }
-    this.groupEnd();
-  },
-
-  scenario(message, data, context) {
-    this.groupCollapsed(`📂 SCENARIO: ${message}`, context);
-    if (data !== undefined && data !== null) {
-      console.table(Array.isArray(data) ? data : [data]);
-    }
-    this.groupEnd();
-  },
-
-  data(message, data, context) {
-    this.groupCollapsed(`📦 DATA: ${message}`, context);
-    if (data !== undefined && data !== null) {
-      console.dir(data, { depth: null });
-    }
-    this.groupEnd();
-  },
-
-  step(message, data, context) {
-    this.info(`➡️ ${message}`, data, context);
-  }
 };
 
 
@@ -172,10 +238,10 @@ function saveLog(message) {
 
     Logger.step("Lecture des logs existants depuis chrome.storage.local...", null, "saveLog");
     chrome.storage.local.get({ logs: [] }, (data) => {
-        Logger.inspect(data, "Données récupérées", "saveLog");
+        Logger.inspect(data, `Données récupérées: ${Object.keys(data).length} clés (${data.logs ? data.logs.length : 0} logs)`, "saveLog");
 
         const logs = data.logs || [];
-        Logger.inspect(logs, "Logs actuels", "saveLog");
+        Logger.inspect(logs, `Logs actuels (${logs.length} items)`, "saveLog");
 
         logs.push(logMessage);
         Logger.success("Log ajouté en mémoire", null, "saveLog");
@@ -237,7 +303,7 @@ function clearChromeStorageLocal() {
 async function waitForElement(xpath, timeout = 30) {
     Logger.groupCollapsed("waitForElement", "waitForElement");
     Logger.timeStart("waitForElement", "waitForElement");
-    Logger.element("Attente d'un élément XPath", { xpath, timeout }, "waitForElement");
+    Logger.element(`Attente d'un élément XPath: "${xpath}" (timeout: ${timeout}s)`, { xpath, timeout }, "waitForElement");
 
     const start = Date.now();
     const end = start + timeout * 1000;
@@ -286,9 +352,9 @@ function getElementTextByXPath(xpath) {
         const result = el ? el.textContent.trim() : null;
 
         if (result !== null) {
-            Logger.success("Element trouvé", result, "getElementTextByXPath");
+            Logger.success(`Element trouvé: "${xpath}" → "${result}"`, result, "getElementTextByXPath");
         } else {
-            Logger.warning("Element introuvable", xpath, "getElementTextByXPath");
+            Logger.warning(`Element introuvable: "${xpath}"`, xpath, "getElementTextByXPath");
         }
 
         Logger.timeEnd("getElementTextByXPath", "getElementTextByXPath");
@@ -330,7 +396,7 @@ function getElementTextByXPath(xpath) {
 async function findElementByXPath(xpath, timeout = 10, obligatoire = false, type = undefined) {
     Logger.groupCollapsed("findElementByXPath", "findElementByXPath");
     Logger.timeStart("findElementByXPath", "findElementByXPath");
-    Logger.element("Recherche d'élément XPath", { xpath, timeout, obligatoire, type }, "findElementByXPath");
+    Logger.element(`Recherche d'élément XPath: "${xpath}" (timeout: ${timeout}s, obligatoire: ${obligatoire})`, { xpath, timeout, obligatoire, type }, "findElementByXPath");
 
     const start = Date.now(), end = start + timeout * 1000;
     let attempt = 0;
@@ -427,7 +493,7 @@ function getElementCountByXPath(xpath) {
     try {
         const snapshot = document.evaluate(xpath, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
         count = snapshot.snapshotLength;
-        Logger.success(`Found ${count} element(s) for XPath`, xpath, "getElementCountByXPath");
+        Logger.success(`Found ${count} element(s) for XPath: "${xpath}"`, xpath, "getElementCountByXPath");
     } catch (e) {
         Logger.error("XPath error", e, "getElementCountByXPath");
     }
@@ -619,7 +685,7 @@ async function openNewTabAndDownloadFile(etat) {
         Logger.success("session_id trouvé", session_id, "openNewTabAndDownloadFile");
 
         Logger.step("Nettoyage de chrome.storage.local", null, "openNewTabAndDownloadFile");
-        await clearChromeStorageLocal();
+        // await clearChromeStorageLocal();
 
         Logger.step("Ouverture d'un nouvel onglet vers StackOverflow", null, "openNewTabAndDownloadFile");
         const newTab = window.open("https://stackoverflow.com");
@@ -656,16 +722,75 @@ async function openNewTabAndDownloadFile(etat) {
 
 
 // =========================================================
-// TRAITEMENT DES ACTIONS (ReportingActions)
-// actions : tableau d'actions à exécuter
-// process : nom du processus courant
+// GÉNÉRATION DE DESCRIPTION DÉTAILLÉE DU SCÉNARIO SELON FLOW CHART
+// action : objet action à analyser
+// isCompleted : boolean indiquant si l'action est déjà traitée
+// retourne : string de description détaillée
 // =========================================================
+function generateScenarioDescription(action, isCompleted) {
+    const hasSubActions = action.sub_action?.length > 0;
+    const actionType = action.action;
+    const xpath = action.xpath || 'N/A';
+    const wait = action.wait || 'N/A';
+    const type = action.type || 'N/A';
+
+    let scenario = '';
+
+    // Détermination du scénario selon le flow chart
+    if (isCompleted && hasSubActions) {
+        scenario = `✅ SCÉNARIO 3: Action déjà traitée + contient ${action.sub_action.length} sub_actions → SKIP action principale + traitement récursif des sub_actions`;
+    } else if (isCompleted && !hasSubActions) {
+        scenario = `✅ SCÉNARIO 1: Action déjà traitée + ne contient pas de sub_actions → SKIP action + passage à l'action suivante`;
+    } else if (!isCompleted && hasSubActions) {
+        if (actionType === 'check_if_exist') {
+            if (type) {
+                scenario = `🔄 SCÉNARIO 6: Condition check_if_exist + type="${type}" → Vérification élément → Si trouvé: Téléchargement + HARD_STOP_DOWNLOAD`;
+            } else {
+                scenario = `🔄 SCÉNARIO 4: Condition check_if_exist + contient ${action.sub_action.length} sub_actions → Vérification élément → Si trouvé: Exécution + Marquage + Traitement sub_actions récursif`;
+            }
+        } else if (actionType === 'Loop') {
+            scenario = `🔄 SCÉNARIO 7: Loop avec ${action.sub_action.length} sub_actions → Itération par itération → Traitement récursif des sub_actions`;
+        } else {
+            scenario = `🔄 SCÉNARIO 2+: Action non traitée + contient ${action.sub_action.length} sub_actions → Exécution + Marquage + Traitement sub_actions récursif`;
+        }
+    } else if (!isCompleted && !hasSubActions) {
+        if (actionType === 'check_if_exist') {
+            if (type) {
+                scenario = `🔄 SCÉNARIO 6: Condition check_if_exist + type="${type}" → Vérification élément → Si trouvé: Téléchargement + HARD_STOP_DOWNLOAD`;
+            } else {
+                scenario = `⚠️ SCÉNARIO 5: Condition check_if_exist sans sub_actions → Vérification élément → Si trouvé: Action normale | Si absent: SKIP`;
+            }
+        } else {
+            scenario = `🔄 SCÉNARIO 2: Action non traitée + ne contient pas de sub_actions → Exécution normale + Marquage complété`;
+        }
+    }
+
+    // Construction du message détaillé
+    const status = isCompleted ? '✅ DÉJÀ TRAITÉE' : '🔄 NON TRAITÉE';
+    const subActionInfo = hasSubActions ? `📎 CONTIENT ${action.sub_action.length} SUB_ACTIONS` : '📎 AUCUNE SUB_ACTION';
+
+    return `${status} | ${subActionInfo} | ${scenario} | Action: ${actionType} | XPath: ${xpath} | Wait: ${wait}s${type !== 'N/A' ? ` | Type: ${type}` : ''}`;
+}
 async function ReportingActions(actions, process) {
-    Logger.groupCollapsed("ReportingActions", process);
+    const processName = `ReportingActions-${process}`;
+    const groupOpened = Logger.startProcessGroup(processName, "ReportingActions");
     Logger.timeStart("ReportingActions", process);
-    Logger.info("Process démarré", process, "ReportingActions");
-    Logger.inspect(actions, "Actions reçues", "ReportingActions");
-    Logger.info(`Nombre total d'actions: ${actions.length}`, null, "ReportingActions");
+
+    if (groupOpened) {
+        Logger.inspect(actions, "Actions reçues", "ReportingActions");
+        Logger.info(`Nombre total d'actions: ${actions.length}`, null, "ReportingActions");
+
+        // Récupération des actions complétées pour affichage dans le groupe parent
+        const completedActions = await new Promise((resolve) => {
+            chrome.storage.local.get("completedActions", (result) => {
+                resolve(result.completedActions || {});
+            });
+        });
+        const currentProcessCompleted = completedActions[process] || [];
+        Logger.data(`Actions déjà complétées: ${currentProcessCompleted.length} actions`, currentProcessCompleted, "ReportingActions");
+    } else {
+        Logger.info(`Continuation du process: ${processName}`, { actionsCount: actions.length }, "ReportingActions");
+    }
 
     try {
         // Récupération des actions complétées
@@ -675,8 +800,10 @@ async function ReportingActions(actions, process) {
             });
         });
         const currentProcessCompleted = completedActions[process] || [];
-        Logger.inspect(currentProcessCompleted, "Actions complétées précédemment", "ReportingActions");
-        Logger.info(`Actions déjà complétées: ${currentProcessCompleted.length}`, null, "ReportingActions");
+        if (!groupOpened) {
+            Logger.inspect(currentProcessCompleted, "Actions complétées précédemment", "ReportingActions");
+            Logger.info(`Actions déjà complétées: ${currentProcessCompleted.length}`, null, "ReportingActions");
+        }
 
         const normalize = (obj) => {
             const sortedKeys = Object.keys(obj).sort();
@@ -711,11 +838,35 @@ async function ReportingActions(actions, process) {
             }
         };
 
+        // Affichage du statut de toutes les actions avec couleurs différentes
+        if (groupOpened) {
+            Logger.groupCollapsed("📋 État des actions", "ReportingActions");
+            actions.forEach((action, index) => {
+                const isCompleted = isActionCompleted(action);
+                if (isCompleted) {
+                    Logger.completed(`Action ${index + 1}: ${action.action}${action.xpath ? ` (${action.xpath})` : ''}`, { action: action.action, xpath: action.xpath, completed: true }, "ReportingActions");
+                } else {
+                    Logger.upcoming(`Action ${index + 1}: ${action.action}${action.xpath ? ` (${action.xpath})` : ''}`, { action: action.action, xpath: action.xpath, completed: false }, "ReportingActions");
+                }
+            });
+            Logger.groupEnd();
+        }
+
         for (const action of actions) {
             Logger.groupCollapsed(`Traitement action ${action.action}`, "ReportingActions");
             Logger.timeStart(`Action-${action.action}`, "ReportingActions");
-            Logger.action("Action en cours", { action: action.action, xpath: action.xpath, wait: action.wait, type: action.type, sub_action_count: action.sub_action?.length || 0 }, "ReportingActions");
-            Logger.data("Action payload", action, "ReportingActions");
+            // Génération et affichage de la description détaillée du scénario
+            const scenarioDescription = generateScenarioDescription(action, isActionCompleted(action));
+            Logger.processing(`🎯 ACTION EN COURS - ${scenarioDescription}`, {
+                action: action.action,
+                xpath: action.xpath,
+                wait: action.wait,
+                type: action.type,
+                sub_actions: action.sub_action?.length || 0,
+                deja_traitee: isActionCompleted(action),
+                scenario_detaille: scenarioDescription
+            }, "ReportingActions");
+            Logger.data(`Action payload: ${action.action}${action.xpath ? ` | XPath: ${action.xpath}` : ''}${action.wait ? ` | Wait: ${action.wait}s` : ''}`, action, "ReportingActions");
 
             if (redirectUrls.includes(window.location.href)) {
                 Logger.warning("Redirection vers Gmail inbox détectée", window.location.href, "ReportingActions");
@@ -738,12 +889,12 @@ async function ReportingActions(actions, process) {
 
             try {
                 if (action.action === "check_if_exist") {
-                    Logger.element("Check_if_exist requested", { xpath: action.xpath, wait: action.wait, type: action.type }, "ReportingActions");
+                    Logger.element(`Check_if_exist requested: "${action.xpath}" (wait: ${action.wait}s)`, { xpath: action.xpath, wait: action.wait, type: action.type }, "ReportingActions");
                     Logger.step(`Vérification existence élément XPath`, action.xpath, "ReportingActions");
                     const elementExists = await waitForElement(action.xpath, action.wait);
 
                     if (elementExists) {
-                        Logger.element("Check_if_exist trouvé", { xpath: action.xpath, type: action.type }, "ReportingActions");
+                        Logger.element(`Check_if_exist trouvé: "${action.xpath}"`, { xpath: action.xpath, type: action.type }, "ReportingActions");
                         Logger.success("Élément trouvé", action.xpath, "ReportingActions");
                         if (action.type) {
                             Logger.step("Ouverture nouvel onglet et téléchargement", action.type, "ReportingActions");
@@ -796,9 +947,8 @@ async function ReportingActions(actions, process) {
         Logger.error("Erreur dans ReportingActions", err, "ReportingActions");
     }
 
-    Logger.success(`Process terminé: ${process}`, { totalActions: actions.length }, "ReportingActions");
     Logger.timeEnd("ReportingActions", process);
-    Logger.groupEnd();
+    Logger.endProcessGroup(processName, "ReportingActions");
 
     return true;
 }
