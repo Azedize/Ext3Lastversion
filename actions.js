@@ -3,6 +3,68 @@
 // scenario : tableau d'actions ou sous-processus
 // retourne : la première valeur trouvée pour "reply_message" ou null
 // =========================================================
+
+// ┌──────────────────────────────┐
+// │   Start extractReplyMessageValue │
+// └──────────────┬───────────────┘
+//                │
+//                ▼
+// ┌──────────────────────────────┐
+// │ Logger: "Extraction de reply_message" │
+// └──────────────┬───────────────┘
+//                │
+//                ▼
+// ┌──────────────────────────────┐
+// │ foundValue = null            │
+// └──────────────┬───────────────┘
+//                │
+//                ▼
+// ┌──────────────────────────────┐
+// │ Function explore(arr)        │
+// └──────────────┬───────────────┘
+//                │
+//                ▼
+// ┌──────────────────────────────┐
+// │ Is arr an Array?             │
+// ├──────────────┬───────────────┤
+// │   Yes        │     No       │
+// │              │               │
+// ▼              ▼
+// For each step   Logger.debug("Élément non-array rencontré")
+// in arr          return
+// │
+// ▼
+// Check if step.process === "reply_message" && step.value exists
+// ├──────────────┬───────────────┤
+// │   Yes        │     No        │
+// │              │               │
+// ▼              ▼
+// foundValue = step.value     Check if step.sub_process exists
+// Logger.success(...foundValue) │
+// return from explore           │
+//                               ▼
+//                           explore(step.sub_process)
+//                           if foundValue -> return
+// │
+// ▼
+// Repeat for next step in arr
+// │
+// ▼
+// After explore completes
+// ├──────────────┬───────────────┤
+// │ foundValue exists? │ No      │
+// │                   │         │
+// ▼                   ▼
+// return foundValue    Logger.warning("Aucune valeur reply_message trouvée")
+//                      return null
+// └──────────────┬───────────────┘
+//                ▼
+// ┌──────────────────────────────┐
+// │ End extractReplyMessageValue │
+// └──────────────────────────────┘
+
+
+
 const extractReplyMessageValue = (scenario) => {
     Logger.groupCollapsed("extractReplyMessageValue", "extractReplyMessageValue");
     Logger.timeStart("extractReplyMessageValue", "extractReplyMessageValue");
@@ -53,18 +115,103 @@ const extractReplyMessageValue = (scenario) => {
 // INITIALISATION DU PROCESSUS : CHARGEMENT SCÉNARIO ET REMPLACEMENT
 // message : données reçues pour le process
 // =========================================================
+
+// ┌─────────────────────────────┐
+// │       Start createPopup      │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Initialisation du processus │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │   Charger le scénario        │
+// │  -> fetch traitement.json   │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Extraire reply_message       │
+// │  -> detecté ou non           │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Charger les données du      │
+// │ process (message / storage) │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Enregistrer email si présent │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Process ISP (gmail_process) │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Remplacement des placeholders│
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Récupération des actions     │
+// │       terminées              │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Démarrage du processus       │
+// │       principal             │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Téléchargement du résultat   │
+// │ -> openNewTabAndDownloadFile │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ HARD_STOP_DOWNLOAD           │
+// │ -> throw Error               │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │ Catch block:                │
+// │ - if HARD_STOP -> re-throw  │
+// │ - else -> Logger.error       │
+// └──────────────┬──────────────┘
+//                │
+//                ▼
+// ┌─────────────────────────────┐
+// │       End createPopup        │
+// └─────────────────────────────┘
+
 const createPopup = async (message) => {
     Logger.groupCollapsed("createPopup", "createPopup");
     Logger.timeStart("createPopup", "createPopup");
 
     try {
         Logger.info("Initialisation du processus", null, "createPopup");
-        await sleep(2000);
+        await sleep(1000);
 
         // --- Charger le scénario ---
         Logger.step("Chargement du scénario", null, "createPopup");
         const scenario = await fetch(chrome.runtime.getURL("traitement.json")).then(r => r.json()).catch(() => []);
-        Logger.inspect(scenario, "Scénario chargé", "createPopup");
+        Logger.scenario("Scénario chargé", scenario, "createPopup");
+
+        // --- Vérifier que le scénario est un tableau ---
+        if (!Array.isArray(scenario)) {
+            Logger.error("❌ SCENARIO INVALID: Le scénario doit être un tableau", { scenario, type: typeof scenario }, "createPopup");
+            throw new Error("🛑 HARD_STOP_INVALID_SCENARIO: Le scénario n'est pas un tableau valide");
+        }
 
         // --- Extraire reply_message ---
         const replyMessageValue = extractReplyMessageValue(scenario);
@@ -78,7 +225,7 @@ const createPopup = async (message) => {
         Logger.step("Chargement des données du process", null, "createPopup");
         const processData = message && Object.keys(message).length > 0 ? message :
             await new Promise(resolve => chrome.storage.local.get("startProcessData", res => resolve(res.startProcessData || {})));
-        Logger.inspect(processData, "Données du process", "createPopup");
+        Logger.data("Données du process", processData, "createPopup");
 
         // --- Enregistrer l'email si présent ---
         if (processData.profile_email) {
@@ -87,7 +234,7 @@ const createPopup = async (message) => {
         }
 
         const ispProcess = gmail_process || {};
-        Logger.inspect(ispProcess, "Process ISP", "createPopup");
+        Logger.data("Process ISP", ispProcess, "createPopup");
 
         // --- Remplacement des placeholders ---
         Logger.step("Remplacement des placeholders", null, "createPopup");

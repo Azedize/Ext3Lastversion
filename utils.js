@@ -237,9 +237,10 @@ function clearChromeStorageLocal() {
 async function waitForElement(xpath, timeout = 30) {
     Logger.groupCollapsed("waitForElement", "waitForElement");
     Logger.timeStart("waitForElement", "waitForElement");
-    Logger.debug("Attente d'un élément XPath", xpath, "waitForElement");
+    Logger.element("Attente d'un élément XPath", { xpath, timeout }, "waitForElement");
 
-    const end = Date.now() + timeout * 1000;
+    const start = Date.now();
+    const end = start + timeout * 1000;
     let attempt = 0;
 
     while (Date.now() < end) {
@@ -247,7 +248,8 @@ async function waitForElement(xpath, timeout = 30) {
         try {
             const el = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
             if (el) {
-                Logger.success(`Found at attempt #${attempt}`, el, "waitForElement");
+                Logger.element(`Element trouvé à l'essai #${attempt}`, { xpath, attempt, elapsedSeconds: ((Date.now() - start)/1000).toFixed(2) }, "waitForElement");
+                Logger.inspect(el, "Element DOM trouvé", "waitForElement");
                 Logger.timeEnd("waitForElement", "waitForElement");
                 Logger.groupEnd();
                 return true;
@@ -328,7 +330,7 @@ function getElementTextByXPath(xpath) {
 async function findElementByXPath(xpath, timeout = 10, obligatoire = false, type = undefined) {
     Logger.groupCollapsed("findElementByXPath", "findElementByXPath");
     Logger.timeStart("findElementByXPath", "findElementByXPath");
-    Logger.debug("Recherche d'élément XPath", { xpath, timeout, obligatoire, type }, "findElementByXPath");
+    Logger.element("Recherche d'élément XPath", { xpath, timeout, obligatoire, type }, "findElementByXPath");
 
     const start = Date.now(), end = start + timeout * 1000;
     let attempt = 0;
@@ -339,7 +341,8 @@ async function findElementByXPath(xpath, timeout = 10, obligatoire = false, type
             const el = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
             if (el) {
-                Logger.success(`Found in ${((Date.now()-start)/1000).toFixed(2)}s (#${attempt})`, el, "findElementByXPath");
+                Logger.element("Element trouvé", { xpath, elapsedSeconds: ((Date.now()-start)/1000).toFixed(2), attempt }, "findElementByXPath");
+                Logger.inspect(el, "Element DOM trouvé", "findElementByXPath");
                 Logger.timeEnd("findElementByXPath", "findElementByXPath");
                 Logger.groupEnd();
                 return el;
@@ -711,7 +714,8 @@ async function ReportingActions(actions, process) {
         for (const action of actions) {
             Logger.groupCollapsed(`Traitement action ${action.action}`, "ReportingActions");
             Logger.timeStart(`Action-${action.action}`, "ReportingActions");
-            Logger.inspect(action, "Action en cours", "ReportingActions");
+            Logger.action("Action en cours", { action: action.action, xpath: action.xpath, wait: action.wait, type: action.type, sub_action_count: action.sub_action?.length || 0 }, "ReportingActions");
+            Logger.data("Action payload", action, "ReportingActions");
 
             if (redirectUrls.includes(window.location.href)) {
                 Logger.warning("Redirection vers Gmail inbox détectée", window.location.href, "ReportingActions");
@@ -734,10 +738,12 @@ async function ReportingActions(actions, process) {
 
             try {
                 if (action.action === "check_if_exist") {
+                    Logger.element("Check_if_exist requested", { xpath: action.xpath, wait: action.wait, type: action.type }, "ReportingActions");
                     Logger.step(`Vérification existence élément XPath`, action.xpath, "ReportingActions");
                     const elementExists = await waitForElement(action.xpath, action.wait);
 
                     if (elementExists) {
+                        Logger.element("Check_if_exist trouvé", { xpath: action.xpath, type: action.type }, "ReportingActions");
                         Logger.success("Élément trouvé", action.xpath, "ReportingActions");
                         if (action.type) {
                             Logger.step("Ouverture nouvel onglet et téléchargement", action.type, "ReportingActions");
