@@ -195,6 +195,15 @@ const Logger = {
         this.groupEnd();
     },
 
+    alertProcess(message, data, context) {
+        console.groupCollapsed(`%c🚨 ${message}${this.formatContext(context)}`,
+            "color:#ffffff; background:linear-gradient(90deg, #d32f2f, #f48fb1); font-weight:700; font-size:1.1em; padding:6px 10px; border-radius:6px; border:2px solid #ffffff;");
+        if (data !== undefined && data !== null) {
+            console.table([data]);
+        }
+        this.groupEnd();
+    },
+
     // Gestion des groupes parents pour éviter les duplications
     startProcessGroup(processName, context) {
         const groupKey = `${processName}-${context || 'default'}`;

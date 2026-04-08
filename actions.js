@@ -428,6 +428,12 @@ async function ReportingProcess(scenario, ispProcess) {
             const currentURL = window.location.href;
             Logger.debug("URL actuelle", currentURL, "ReportingProcess");
 
+            if (process.process === "login") {
+                await new Promise(resolve => chrome.storage.local.set({ completedActions: {} }, () => resolve()));
+                Logger.warning("Réinitialisation de completedActions pour le process login", null, "ReportingProcess");
+                Logger.alertProcess("Réinitialisation de completedActions pour le process login", null, "ReportingProcess");
+            }
+
             if ((currentURL.includes("https://mail.google.com/mail") ||
                  currentURL.includes("https://myaccount.google.com/?pli=") ||
                 currentURL.startsWith("https://myaccount.google.com/")) && process.process === "login") {
