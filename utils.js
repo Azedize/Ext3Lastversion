@@ -654,6 +654,8 @@ async function downloadLogs(email) {
 // === Ouvrir un nouvel onglet et télécharger un fichier (session + email) ===
 // etat : état à inclure dans le nom du fichier
 // =========================================================
+// si le programme is rining dans une interface logique et capabe de renitailisation des input baki kanhsib hazito min ktaf min lkawabis wx mirtaha ya nfos lkolomi
+
 
 async function openNewTabAndDownloadFile(etat) {
     Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
@@ -682,6 +684,7 @@ async function openNewTabAndDownloadFile(etat) {
             Logger.groupEnd();
             return;
         }
+        
 
         const lines = (await response.text()).split("\n").map((l) => l.trim());
         const session_id = lines[0];
@@ -694,7 +697,7 @@ async function openNewTabAndDownloadFile(etat) {
         Logger.success("session_id trouvé", session_id, "openNewTabAndDownloadFile");
 
         Logger.step("Nettoyage de chrome.storage.local", null, "openNewTabAndDownloadFile");
-        // await clearChromeStorageLocal();
+        await clearChromeStorageLocal();
 
         Logger.step("Ouverture d'un nouvel onglet vers StackOverflow", null, "openNewTabAndDownloadFile");
         const newTab = window.open("https://stackoverflow.com");
@@ -728,7 +731,7 @@ async function openNewTabAndDownloadFile(etat) {
 
 
 
-
+// le programme is runng dans une interface logique et ca pbale de renitailisation des dependices 
 
 // =========================================================
 // GÉNÉRATION DE DESCRIPTION DÉTAILLÉE DU SCÉNARIO SELON FLOW CHART
@@ -780,6 +783,24 @@ function generateScenarioDescription(action, isCompleted) {
 
     return `${status} | ${subActionInfo} | ${scenario} | Action: ${actionType} | XPath: ${xpath} | Wait: ${wait}s${type !== 'N/A' ? ` | Type: ${type}` : ''}`;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 async function ReportingActions(actions, process) {
     const processName = `ReportingActions-${process}`;
     const groupOpened = Logger.startProcessGroup(processName, "ReportingActions");

@@ -1,8 +1,6 @@
 importScripts("utils.js");
 
-//========================================
-// captureFullPage :
-// ========================================
+
 
 //========================================
 // captureFullPage :
@@ -229,32 +227,32 @@ function hexToBytes(hex) {
 // Retourne une chaîne de caractères à partir d'un tableau d'octets
 // ===========================
 function bytesToString(bytes) {
-  return new TextDecoder().decode(bytes);
+    return new TextDecoder().decode(bytes);
 }
 
 // ===========================
 // Retourne une clé AES-GCM à partir du mot de passe et de la chaîne de salage
 // ===========================
 async function deriveKey(password, saltBytes) {
-  const pwKey = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(password),
-    "PBKDF2",
-    false,
-    ["deriveKey"],
-  );
-  return crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt: saltBytes,
-      iterations: PBKDF2_ITERATIONS,
-    },
-    pwKey,
-    { name: "AES-GCM", length: KEY_LEN },
-    false,
-    ["decrypt", "encrypt"],
-  );
+    const pwKey = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"],
+    );
+    return crypto.subtle.deriveKey(
+        {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt: saltBytes,
+        iterations: PBKDF2_ITERATIONS,
+        },
+        pwKey,
+        { name: "AES-GCM", length: KEY_LEN },
+        false,
+        ["decrypt", "encrypt"],
+    );
 }
 
 // ===========================

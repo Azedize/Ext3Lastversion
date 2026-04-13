@@ -26,11 +26,12 @@ const gmail_process = {
                                             ]
                                         }
                                         , 
-                                        // {"action": "check_if_exist", "xpath": "//form//div[contains(text(), 'robot')]", "wait": 4,"sleep": 0, 
-                                        //     "sub_action": [
-                                        //         {"action": "check_if_exist", "xpath": "//form//div[contains(text(), 'robot')]", "wait": 2, "sleep": 2 },   // validation capcha 
-                                        //     ]
-                                        // },
+                                         {
+                                             "action": "check_if_exist", "xpath": "//form//div[contains(text(), 'robot')]", "wait": 4, "sleep": 0, "obligatoire": true, "type": "validation_capcha",
+                                            "sub_action": [
+                                                {"action": "check_if_exist", "xpath": "//form//div[contains(text(), 'robot')]", "wait": 2, "sleep": 2 },   // validation capcha 
+                                            ]
+                                        },
                                         {"action": "check_if_exist", "xpath":   "//div[span and (text()[contains(., 'Impossible de trouver votre compte Google')] or .//font[contains(text(), 'Unable to find your Google account')])]", "wait": 4,"sleep": 0, 
                                             "sub_action": [
                                                 {"action": "check_if_exist",  "xpath": "//div[span and (text()[contains(., 'Impossible de trouver votre compte Google')] or .//font[contains(text(), 'Unable to find your Google account')])]","wait": 2, "sleep": 2 , "obligatoire":true , "type":"others"},   // others
