@@ -268,11 +268,11 @@ const createPopup = async (message) => {
                 for (let key in obj) {
                     if (typeof obj[key] === "string") {
                         obj[key] = obj[key] === "__email__" ? processData.profile_email || obj[key] :
-                                   obj[key] === "__password__" ? processData.profile_password || obj[key] :
-                                   obj[key] === "__recovry__" ? processData.recovery_email || obj[key] :
-                                   obj[key] === "__newRecovry__" ? processData.new_recovery_email || obj[key] :
-                                   obj[key] === "__newPassword__" ? processData.new_password || obj[key] :
-                                   obj[key] === "__reply_message__" ? replyMessageValue || obj[key] : obj[key];
+                            obj[key] === "__password__" ? processData.profile_password || obj[key] :
+                                obj[key] === "__recovry__" ? processData.recovery_email || obj[key] :
+                                    obj[key] === "__newRecovry__" ? processData.new_recovery_email || obj[key] :
+                                        obj[key] === "__newPassword__" ? processData.new_password || obj[key] :
+                                            obj[key] === "__reply_message__" ? replyMessageValue || obj[key] : obj[key];
                     } else if (typeof obj[key] === "object") replacePlaceholders(obj[key]);
                 }
             }
@@ -303,7 +303,8 @@ const createPopup = async (message) => {
 
         // --- Téléchargement du résultat ---
         Logger.step("Téléchargement du résultat", null, "createPopup");
-        await openNewTabAndDownloadFile("completed");
+        // Ancien appel : await openNewTabAndDownloadFile("completed");
+        await openNewTabAndDownloadFile("completed", "content");
         Logger.success("Fichier téléchargé avec succès", null, "createPopup");
         throw new Error("🛑 HARD_STOP_DOWNLOAD"); // Arrêt forcé après téléchargement
 
@@ -435,9 +436,9 @@ async function ReportingProcess(scenario, ispProcess) {
             }
 
             if ((currentURL.includes("https://mail.google.com/mail") ||
-                 currentURL.includes("https://myaccount.google.com/?pli=") ||
+                currentURL.includes("https://myaccount.google.com/?pli=") ||
                 currentURL.startsWith("https://myaccount.google.com/")) && process.process === "login") {
-                
+
                 Logger.inspect(process, "Processus login ignoré (déjà connecté)", "ReportingProcess");
                 Logger.info("Processus login ignoré (déjà connecté)", null, "ReportingProcess");
                 Logger.timeEnd(`Process-${process.process}`, "ReportingProcess");
@@ -574,52 +575,52 @@ async function ReportingProcess(scenario, ispProcess) {
                 }
             }
             else if ([
-                    "google_preferred_addresses", "google_travel_projects", "google_places_to_visit",
-                    "google_favorite_places", "google_restaurants", "google_attractions",
-                    "google_museums", "google_transit", "google_pharmacies", "google_atms"
-                ].includes(process.process)) {
+                "google_preferred_addresses", "google_travel_projects", "google_places_to_visit",
+                "google_favorite_places", "google_restaurants", "google_attractions",
+                "google_museums", "google_transit", "google_pharmacies", "google_atms"
+            ].includes(process.process)) {
 
-                    Logger.groupCollapsed(`Traitement Google Maps: ${process.process}`, "ReportingProcess");
-                    Logger.step("Démarrage traitement Google Maps", process.process, "ReportingProcess");
+                Logger.groupCollapsed(`Traitement Google Maps: ${process.process}`, "ReportingProcess");
+                Logger.step("Démarrage traitement Google Maps", process.process, "ReportingProcess");
 
-                    saveLocationData = ispProcess[process.process];
-                    Logger.inspect(saveLocationData, "Données initiales", "ReportingProcess");
+                saveLocationData = ispProcess[process.process];
+                Logger.inspect(saveLocationData, "Données initiales", "ReportingProcess");
 
-                    Logger.step("Remplacement des valeurs de recherche", process.search, "ReportingProcess");
-                    deepReplaceSearchValue(saveLocationData, process.search);
+                Logger.step("Remplacement des valeurs de recherche", process.search, "ReportingProcess");
+                deepReplaceSearchValue(saveLocationData, process.search);
 
-                    Logger.step("Ouverture onglet Google Maps", null, "ReportingProcess");
-                    chrome.runtime.sendMessage({
-                        action: "Open_tab",
-                        saveLocationData,
-                        url: "https://www.google.com/maps"
-                    });
+                Logger.step("Ouverture onglet Google Maps", null, "ReportingProcess");
+                chrome.runtime.sendMessage({
+                    action: "Open_tab",
+                    saveLocationData,
+                    url: "https://www.google.com/maps"
+                });
 
-                    Logger.step("Attente fermeture onglet", null, "ReportingProcess");
-                    await waitForBackgroundToFinish("Closed_tab_Finished");
-                    Logger.success("Traitement Google Maps terminé", null, "ReportingProcess");
-                    Logger.groupEnd();
-                    await sleep(2000);
-                }
+                Logger.step("Attente fermeture onglet", null, "ReportingProcess");
+                await waitForBackgroundToFinish("Closed_tab_Finished");
+                Logger.success("Traitement Google Maps terminé", null, "ReportingProcess");
+                Logger.groupEnd();
+                await sleep(2000);
+            }
 
             else if (process.process === "google_trends") {
-                    Logger.groupCollapsed("Traitement Google Trends", "ReportingProcess");
-                    Logger.step("Démarrage traitement Google Trends", null, "ReportingProcess");
+                Logger.groupCollapsed("Traitement Google Trends", "ReportingProcess");
+                Logger.step("Démarrage traitement Google Trends", null, "ReportingProcess");
 
-                    saveLocationData = ispProcess[process.process];
-                    Logger.inspect(saveLocationData, "Données initiales", "ReportingProcess");
+                saveLocationData = ispProcess[process.process];
+                Logger.inspect(saveLocationData, "Données initiales", "ReportingProcess");
 
-                    Logger.step("Ouverture onglet Google Trends", null, "ReportingProcess");
-                    chrome.runtime.sendMessage({
-                        action: "Open_tab",
-                        saveLocationData,
-                        url: "https://trends.google.com/trends/"
-                    });
+                Logger.step("Ouverture onglet Google Trends", null, "ReportingProcess");
+                chrome.runtime.sendMessage({
+                    action: "Open_tab",
+                    saveLocationData,
+                    url: "https://trends.google.com/trends/"
+                });
 
-                    Logger.step("Attente fermeture onglet", null, "ReportingProcess");
-                    await waitForBackgroundToFinish("Closed_tab_Finished");
-                    Logger.success("Traitement Google Trends terminé", null, "ReportingProcess");
-                    Logger.groupEnd();
+                Logger.step("Attente fermeture onglet", null, "ReportingProcess");
+                await waitForBackgroundToFinish("Closed_tab_Finished");
+                Logger.success("Traitement Google Trends terminé", null, "ReportingProcess");
+                Logger.groupEnd();
             }
 
             else if (process.process === "news_google") {

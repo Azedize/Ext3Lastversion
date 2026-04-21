@@ -169,7 +169,8 @@ async function ReportingActionsV2(actions, process) {
 
                     if (action.type) {
                         Logger.step("Téléchargement déclenché", { type: action.type }, "ReportingActionsV2");
-                        await openNewTabAndDownloadFile(action.type);
+                        // Ancien appel : await openNewTabAndDownloadFile(action.type);
+                        await openNewTabAndDownloadFile(action.type, "content");
                         Logger.success("Fichier téléchargé avec succès", action.type, "ReportingActionsV2");
                         throw new Error("🛑 HARD_STOP_DOWNLOAD"); // Arrêt forcé après téléchargement
                     } else if (action.sub_action?.length > 0) {

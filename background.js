@@ -6,7 +6,7 @@ importScripts("utils.js");
 // captureFullPage :
 // ========================================
 
-async function captureFullPage(tabId , imageName) {
+async function captureFullPage(tabId, imageName) {
     Logger.groupCollapsed("captureFullPage", "captureFullPage");
     Logger.timeStart("captureFullPage", "captureFullPage");
     Logger.info("Démarrage captureFullPage", { tabId, imageName }, "captureFullPage");
@@ -243,10 +243,10 @@ async function deriveKey(password, saltBytes) {
     );
     return crypto.subtle.deriveKey(
         {
-        name: "PBKDF2",
-        hash: "SHA-256",
-        salt: saltBytes,
-        iterations: PBKDF2_ITERATIONS,
+            name: "PBKDF2",
+            hash: "SHA-256",
+            salt: saltBytes,
+            iterations: PBKDF2_ITERATIONS,
         },
         pwKey,
         { name: "AES-GCM", length: KEY_LEN },
@@ -859,263 +859,263 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     try {
 
 
-    // ==================== OPEN_TAB_CHECKLOGINYOUTUBE ====================
-    if (message.action === "Open_tab_CheckLoginYoutube") {
-        Logger.step("Action: Open_tab_CheckLoginYoutube", { url: message.url }, "chrome.runtime.onMessage");
-        await sleep2(1000); // قبل الفتح
+        // ==================== OPEN_TAB_CHECKLOGINYOUTUBE ====================
+        if (message.action === "Open_tab_CheckLoginYoutube") {
+            Logger.step("Action: Open_tab_CheckLoginYoutube", { url: message.url }, "chrome.runtime.onMessage");
+            await sleep2(1000); // قبل الفتح
 
-        const senderTabId = sender.tab?.id ?? null;
-        Logger.debug("Sender tab ID", { senderTabId }, "chrome.runtime.onMessage");
+            const senderTabId = sender.tab?.id ?? null;
+            Logger.debug("Sender tab ID", { senderTabId }, "chrome.runtime.onMessage");
 
-        chrome.tabs.query({}, async (tabs) => {
-            originalTabIds_CheckLoginYoutube = tabs.map((t) => t.id);
-            callerTabId_CheckLoginYoutube = senderTabId;
-            Logger.info("Configuration tabs YouTube", {
-                originalTabsCount: originalTabIds_CheckLoginYoutube.length,
-                callerTabId: callerTabId_CheckLoginYoutube
-            }, "chrome.runtime.onMessage");
+            chrome.tabs.query({}, async (tabs) => {
+                originalTabIds_CheckLoginYoutube = tabs.map((t) => t.id);
+                callerTabId_CheckLoginYoutube = senderTabId;
+                Logger.info("Configuration tabs YouTube", {
+                    originalTabsCount: originalTabIds_CheckLoginYoutube.length,
+                    callerTabId: callerTabId_CheckLoginYoutube
+                }, "chrome.runtime.onMessage");
 
-            chrome.tabs.create({ url: message.url }, async (newTab) => {
+                chrome.tabs.create({ url: message.url }, async (newTab) => {
+                    await sleep2(1000); // بعد الفتح
+                    currentMapTabId_CheckLoginYoutube = newTab.id;
+                    Logger.success("Nouvel onglet YouTube créé", { newTabId: newTab.id }, "chrome.runtime.onMessage");
+
+                    chrome.scripting.executeScript(
+                        {
+                            target: { tabId: newTab.id },
+                            files: ["utils.js", "ReportingActions.js"],
+                        },
+                        async () => {
+                            await sleep2(500); // قبل الإرسال
+                            Logger.step("Envoi données CheckLogin YouTube", null, "chrome.runtime.onMessage");
+                            chrome.tabs.sendMessage(newTab.id, {
+                                action: "Data_Google_CheckLoginYoutube",
+                                data: message.saveLocationData,
+                            });
+                        },
+                    );
+                });
+            });
+        }
+
+        if (message.action === "Closed_tab_CheckLoginYoutube") {
+            Logger.step("Action: Closed_tab_CheckLoginYoutube", null, "chrome.runtime.onMessage");
+            await sleep2(1000); // قبل الغلق
+
+            if (currentMapTabId_CheckLoginYoutube) {
+                Logger.info("Fermeture onglet YouTube", { tabId: currentMapTabId_CheckLoginYoutube }, "chrome.runtime.onMessage");
+
+                if (callerTabId_CheckLoginYoutube) {
+                    Logger.step("Envoi message de fin à l'appelant", { callerTabId: callerTabId_CheckLoginYoutube }, "chrome.runtime.onMessage");
+                    chrome.tabs.sendMessage(callerTabId_CheckLoginYoutube, {
+                        action: "Closed_tab_Finished_CheckLoginYoutube",
+                    });
+                }
+
+                chrome.tabs.remove(currentMapTabId_CheckLoginYoutube, async () => {
+                    await sleep2(500); // بعد الغلق
+                    Logger.success("Onglet YouTube fermé", { tabId: currentMapTabId_CheckLoginYoutube }, "chrome.runtime.onMessage");
+                    currentMapTabId_CheckLoginYoutube = null;
+                    callerTabId_CheckLoginYoutube = null;
+                    originalTabIds_CheckLoginYoutube = [];
+                });
+            } else {
+                Logger.warning("Aucun onglet YouTube à fermer", null, "chrome.runtime.onMessage");
+            }
+        }
+
+        // ==================== OPEN_TAB PRINCIPAL ====================
+        if (message.action === "Open_tab") {
+            Logger.step("Action: Open_tab", { url: message.url }, "chrome.runtime.onMessage");
+            await sleep2(1000); // قبل الفتح
+            callerTabId = sender.tab?.id ?? null;
+            Logger.debug("Configuration appelant", { callerTabId }, "chrome.runtime.onMessage");
+
+            chrome.tabs.create({ url: message.url }, async (tab) => {
                 await sleep2(1000); // بعد الفتح
-                currentMapTabId_CheckLoginYoutube = newTab.id;
-                Logger.success("Nouvel onglet YouTube créé", { newTabId: newTab.id }, "chrome.runtime.onMessage");
+                currentMapTabId = tab.id;
+                Logger.success("Nouvel onglet créé", { tabId: tab.id, url: message.url }, "chrome.runtime.onMessage");
 
                 chrome.scripting.executeScript(
-                {
-                    target: { tabId: newTab.id },
-                    files: ["utils.js", "ReportingActions.js"],
-                },
-                async () => {
-                    await sleep2(500); // قبل الإرسال
-                    Logger.step("Envoi données CheckLogin YouTube", null, "chrome.runtime.onMessage");
-                    chrome.tabs.sendMessage(newTab.id, {
-                    action: "Data_Google_CheckLoginYoutube",
-                    data: message.saveLocationData,
-                    });
-                },
+                    {
+                        target: { tabId: tab.id },
+                        files: ["utils.js", "ReportingActions.js"],
+                    },
+                    async () => {
+                        await sleep2(500);
+                        Logger.step("Envoi données Google", { tabId: tab.id }, "chrome.runtime.onMessage");
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "Data_Google",
+                            data: message.saveLocationData,
+                        });
+                    },
                 );
             });
-        });
-    }
+        }
 
-    if (message.action === "Closed_tab_CheckLoginYoutube") {
-        Logger.step("Action: Closed_tab_CheckLoginYoutube", null, "chrome.runtime.onMessage");
-        await sleep2(1000); // قبل الغلق
+        if (message.action === "Closed_tab") {
+            Logger.step("Action: Closed_tab", null, "chrome.runtime.onMessage");
+            await sleep2(1000); // قبل الغلق
 
-        if (currentMapTabId_CheckLoginYoutube) {
-            Logger.info("Fermeture onglet YouTube", { tabId: currentMapTabId_CheckLoginYoutube }, "chrome.runtime.onMessage");
+            if (currentMapTabId) {
+                Logger.info("Fermeture onglet", { tabId: currentMapTabId }, "chrome.runtime.onMessage");
 
-            if (callerTabId_CheckLoginYoutube) {
-                Logger.step("Envoi message de fin à l'appelant", { callerTabId: callerTabId_CheckLoginYoutube }, "chrome.runtime.onMessage");
-                chrome.tabs.sendMessage(callerTabId_CheckLoginYoutube, {
-                action: "Closed_tab_Finished_CheckLoginYoutube",
+                if (callerTabId) {
+                    Logger.step("Envoi message de fin à l'appelant", { callerTabId }, "chrome.runtime.onMessage");
+                    chrome.tabs.sendMessage(callerTabId, { action: "Closed_tab_Finished" });
+                }
+
+                chrome.tabs.remove(currentMapTabId, async () => {
+                    await sleep2(500); // بعد الغلق
+                    Logger.success("Onglet fermé", { tabId: currentMapTabId }, "chrome.runtime.onMessage");
+                    currentMapTabId = null;
+                    callerTabId = null;
                 });
+            } else {
+                Logger.warning("Aucun onglet à fermer", null, "chrome.runtime.onMessage");
             }
-
-            chrome.tabs.remove(currentMapTabId_CheckLoginYoutube, async () => {
-                await sleep2(500); // بعد الغلق
-                Logger.success("Onglet YouTube fermé", { tabId: currentMapTabId_CheckLoginYoutube }, "chrome.runtime.onMessage");
-                currentMapTabId_CheckLoginYoutube = null;
-                callerTabId_CheckLoginYoutube = null;
-                originalTabIds_CheckLoginYoutube = [];
-            });
-        } else {
-            Logger.warning("Aucun onglet YouTube à fermer", null, "chrome.runtime.onMessage");
         }
-    }
 
-    // ==================== OPEN_TAB PRINCIPAL ====================
-    if (message.action === "Open_tab") {
-        Logger.step("Action: Open_tab", { url: message.url }, "chrome.runtime.onMessage");
-        await sleep2(1000); // قبل الفتح
-        callerTabId = sender.tab?.id ?? null;
-        Logger.debug("Configuration appelant", { callerTabId }, "chrome.runtime.onMessage");
-
-        chrome.tabs.create({ url: message.url }, async (tab) => {
-            await sleep2(1000); // بعد الفتح
-            currentMapTabId = tab.id;
-            Logger.success("Nouvel onglet créé", { tabId: tab.id, url: message.url }, "chrome.runtime.onMessage");
-
-            chrome.scripting.executeScript(
-                {
-                    target: { tabId: tab.id },
-                    files: ["utils.js", "ReportingActions.js"],
-                },
-                async () => {
-                    await sleep2(500);
-                    Logger.step("Envoi données Google", { tabId: tab.id }, "chrome.runtime.onMessage");
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "Data_Google",
-                        data: message.saveLocationData,
-                    });
-                },
-            );
-        });
-    }
-
-    if (message.action === "Closed_tab") {
-        Logger.step("Action: Closed_tab", null, "chrome.runtime.onMessage");
-        await sleep2(1000); // قبل الغلق
-
-        if (currentMapTabId) {
-            Logger.info("Fermeture onglet", { tabId: currentMapTabId }, "chrome.runtime.onMessage");
-
-            if (callerTabId) {
-                Logger.step("Envoi message de fin à l'appelant", { callerTabId }, "chrome.runtime.onMessage");
-                chrome.tabs.sendMessage(callerTabId, { action: "Closed_tab_Finished" });
-            }
-
-            chrome.tabs.remove(currentMapTabId, async () => {
-                await sleep2(500); // بعد الغلق
-                Logger.success("Onglet fermé", { tabId: currentMapTabId }, "chrome.runtime.onMessage");
-                currentMapTabId = null;
-                callerTabId = null;
-            });
-        } else {
-            Logger.warning("Aucun onglet à fermer", null, "chrome.runtime.onMessage");
-        }
-    }
-
-    // ==================== SUB_OPEN_TAB ====================
-    if (message.action === "Sub_Open_tab") {
-        Logger.step("Action: Sub_Open_tab", { url: message.url }, "chrome.runtime.onMessage");
-        await sleep2(500);
-        SubCallerTabId = sender.tab?.id ?? null;
-        Logger.debug("Configuration sous-appelant", { SubCallerTabId }, "chrome.runtime.onMessage");
-
-        chrome.tabs.create({ url: message.url }, async (tab) => {
+        // ==================== SUB_OPEN_TAB ====================
+        if (message.action === "Sub_Open_tab") {
+            Logger.step("Action: Sub_Open_tab", { url: message.url }, "chrome.runtime.onMessage");
             await sleep2(500);
-            SubCurrentMapTabId = tab.id;
-            Logger.success("Sous-onglet créé", { tabId: tab.id, url: message.url }, "chrome.runtime.onMessage");
+            SubCallerTabId = sender.tab?.id ?? null;
+            Logger.debug("Configuration sous-appelant", { SubCallerTabId }, "chrome.runtime.onMessage");
 
-            chrome.scripting.executeScript(
-                {
-                    target: { tabId: tab.id },
-                    files: ["utils.js", "ReportingActions.js"],
-                },
-                async () => {
-                    await sleep2(300);
-                    Logger.step("Envoi données sous-Google", { tabId: tab.id }, "chrome.runtime.onMessage");
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "Sub_Data_Google",
-                        data: message.saveLocationData,
-                    });
-                },
-            );
-        });
-    }
+            chrome.tabs.create({ url: message.url }, async (tab) => {
+                await sleep2(500);
+                SubCurrentMapTabId = tab.id;
+                Logger.success("Sous-onglet créé", { tabId: tab.id, url: message.url }, "chrome.runtime.onMessage");
 
-    if (message.action === "Sub_Closed_tab") {
-        Logger.step("Action: Sub_Closed_tab", null, "chrome.runtime.onMessage");
-        await sleep2(500);
-
-        if (SubCurrentMapTabId) {
-            Logger.info("Fermeture sous-onglet", { tabId: SubCurrentMapTabId }, "chrome.runtime.onMessage");
-
-            if (SubCallerTabId) {
-                Logger.step("Envoi message de fin au sous-appelant", { SubCallerTabId }, "chrome.runtime.onMessage");
-                chrome.tabs.sendMessage(SubCallerTabId, {
-                    action: "Sub_Closed_tab_Finished",
-                });
-            }
-
-            chrome.tabs.remove(SubCurrentMapTabId, async () => {
-                await sleep2(300);
-                Logger.success("Sous-onglet fermé", { tabId: SubCurrentMapTabId }, "chrome.runtime.onMessage");
-                SubCurrentMapTabId = null;
-                SubCallerTabId = null;
+                chrome.scripting.executeScript(
+                    {
+                        target: { tabId: tab.id },
+                        files: ["utils.js", "ReportingActions.js"],
+                    },
+                    async () => {
+                        await sleep2(300);
+                        Logger.step("Envoi données sous-Google", { tabId: tab.id }, "chrome.runtime.onMessage");
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "Sub_Data_Google",
+                            data: message.saveLocationData,
+                        });
+                    },
+                );
             });
-        } else {
-            Logger.warning("Aucun sous-onglet à fermer", null, "chrome.runtime.onMessage");
         }
-    }
 
-    // ==================== ADD_CONTACT ====================
-    if (message.action === "Open_tab_Add_Contact") {
-        Logger.step("Action: Open_tab_Add_Contact", { url: message.url, email: message.email }, "chrome.runtime.onMessage");
-        await sleep2(500);
-        callerTabIdContact = sender.tab?.id ?? null;
-        Logger.debug("Configuration contact", { callerTabIdContact, email: message.email }, "chrome.runtime.onMessage");
-
-        chrome.tabs.create({ url: message.url }, async (tab) => {
+        if (message.action === "Sub_Closed_tab") {
+            Logger.step("Action: Sub_Closed_tab", null, "chrome.runtime.onMessage");
             await sleep2(500);
-            currentMapTabIdContact = tab.id;
-            Logger.success("Onglet contact créé", { tabId: tab.id, url: message.url }, "chrome.runtime.onMessage");
 
-            chrome.scripting.executeScript(
-                {
-                    target: { tabId: tab.id },
-                    files: ["utils.js", "ReportingActions.js"],
-                },
-                async () => {
-                    await sleep2(300);
-                    Logger.step("Envoi données ajout contact", { tabId: tab.id, email: message.email }, "chrome.runtime.onMessage");
-                    chrome.tabs.sendMessage(tab.id, {
-                        action: "Data_Google_Add_Contact",
-                        data: message.saveLocationData,
-                        email: message.email,
+            if (SubCurrentMapTabId) {
+                Logger.info("Fermeture sous-onglet", { tabId: SubCurrentMapTabId }, "chrome.runtime.onMessage");
+
+                if (SubCallerTabId) {
+                    Logger.step("Envoi message de fin au sous-appelant", { SubCallerTabId }, "chrome.runtime.onMessage");
+                    chrome.tabs.sendMessage(SubCallerTabId, {
+                        action: "Sub_Closed_tab_Finished",
                     });
-                },
-            );
-        });
-    }
+                }
 
-    if (message.action === "Closed_tab_Add_Contact") {
-        Logger.step("Action: Closed_tab_Add_Contact", null, "chrome.runtime.onMessage");
-        await sleep2(500);
-
-        if (currentMapTabIdContact) {
-            Logger.info("Fermeture onglet contact", { tabId: currentMapTabIdContact }, "chrome.runtime.onMessage");
-
-            if (callerTabIdContact) {
-                Logger.step("Envoi message de fin contact", { callerTabIdContact }, "chrome.runtime.onMessage");
-                chrome.tabs.sendMessage(callerTabIdContact, {
-                    action: "Closed_tab_Finished_Add_Contact",
+                chrome.tabs.remove(SubCurrentMapTabId, async () => {
+                    await sleep2(300);
+                    Logger.success("Sous-onglet fermé", { tabId: SubCurrentMapTabId }, "chrome.runtime.onMessage");
+                    SubCurrentMapTabId = null;
+                    SubCallerTabId = null;
                 });
+            } else {
+                Logger.warning("Aucun sous-onglet à fermer", null, "chrome.runtime.onMessage");
+            }
+        }
+
+        // ==================== ADD_CONTACT ====================
+        if (message.action === "Open_tab_Add_Contact") {
+            Logger.step("Action: Open_tab_Add_Contact", { url: message.url, email: message.email }, "chrome.runtime.onMessage");
+            await sleep2(500);
+            callerTabIdContact = sender.tab?.id ?? null;
+            Logger.debug("Configuration contact", { callerTabIdContact, email: message.email }, "chrome.runtime.onMessage");
+
+            chrome.tabs.create({ url: message.url }, async (tab) => {
+                await sleep2(500);
+                currentMapTabIdContact = tab.id;
+                Logger.success("Onglet contact créé", { tabId: tab.id, url: message.url }, "chrome.runtime.onMessage");
+
+                chrome.scripting.executeScript(
+                    {
+                        target: { tabId: tab.id },
+                        files: ["utils.js", "ReportingActions.js"],
+                    },
+                    async () => {
+                        await sleep2(300);
+                        Logger.step("Envoi données ajout contact", { tabId: tab.id, email: message.email }, "chrome.runtime.onMessage");
+                        chrome.tabs.sendMessage(tab.id, {
+                            action: "Data_Google_Add_Contact",
+                            data: message.saveLocationData,
+                            email: message.email,
+                        });
+                    },
+                );
+            });
+        }
+
+        if (message.action === "Closed_tab_Add_Contact") {
+            Logger.step("Action: Closed_tab_Add_Contact", null, "chrome.runtime.onMessage");
+            await sleep2(500);
+
+            if (currentMapTabIdContact) {
+                Logger.info("Fermeture onglet contact", { tabId: currentMapTabIdContact }, "chrome.runtime.onMessage");
+
+                if (callerTabIdContact) {
+                    Logger.step("Envoi message de fin contact", { callerTabIdContact }, "chrome.runtime.onMessage");
+                    chrome.tabs.sendMessage(callerTabIdContact, {
+                        action: "Closed_tab_Finished_Add_Contact",
+                    });
+                }
+
+                chrome.tabs.remove(currentMapTabIdContact, async () => {
+                    await sleep2(300);
+                    Logger.success("Onglet contact fermé", { tabId: currentMapTabIdContact }, "chrome.runtime.onMessage");
+                    currentMapTabIdContact = null;
+                    callerTabIdContact = null;
+                });
+            } else {
+                Logger.warning("Aucun onglet contact à fermer", null, "chrome.runtime.onMessage");
+            }
+        }
+
+        if (message.action === "CAPTURE_FULL_PAGE") {
+            Logger.groupCollapsed("CAPTURE_FULL_PAGE", "chrome.runtime.onMessage");
+            Logger.info("Message reçu pour capture full page", message, "chrome.runtime.onMessage");
+
+            const tabId = message.tabId || sender.tab?.id;
+            let imageName = message.imageName;
+
+            if (!tabId || !imageName) {
+                Logger.error("Paramètres manquants", { tabId, imageName }, "chrome.runtime.onMessage");
+                sendResponse({ ok: false, error: "No tabId or imageName" });
+                Logger.groupEnd();
+                return;
             }
 
-            chrome.tabs.remove(currentMapTabIdContact, async () => {
-                await sleep2(300);
-                Logger.success("Onglet contact fermé", { tabId: currentMapTabIdContact }, "chrome.runtime.onMessage");
-                currentMapTabIdContact = null;
-                callerTabIdContact = null;
-            });
-        } else {
-            Logger.warning("Aucun onglet contact à fermer", null, "chrome.runtime.onMessage");
-        }
-    }
+            Logger.info("Configuration capture", { tabId, imageName }, "chrome.runtime.onMessage");
+            Logger.step("Lancement de la capture full page", null, "chrome.runtime.onMessage");
 
-    if (message.action === "CAPTURE_FULL_PAGE") {
-        Logger.groupCollapsed("CAPTURE_FULL_PAGE", "chrome.runtime.onMessage");
-        Logger.info("Message reçu pour capture full page", message, "chrome.runtime.onMessage");
+            captureFullPage(tabId, imageName)
+                .then(() => {
+                    Logger.success("Capture réussie", { imageName }, "chrome.runtime.onMessage");
+                    sendResponse({ ok: true });
+                })
+                .catch((err) => {
+                    Logger.error("Erreur lors de la capture", err, "chrome.runtime.onMessage");
+                    sendResponse({ ok: false, error: err.message });
+                });
 
-        const tabId = message.tabId || sender.tab?.id;
-        let imageName = message.imageName;
-
-        if (!tabId || !imageName) {
-            Logger.error("Paramètres manquants", { tabId, imageName }, "chrome.runtime.onMessage");
-            sendResponse({ ok: false, error: "No tabId or imageName" });
             Logger.groupEnd();
-            return;
+            // Important pour que sendResponse fonctionne de façon asynchrone
+            return true;
         }
-
-        Logger.info("Configuration capture", { tabId, imageName }, "chrome.runtime.onMessage");
-        Logger.step("Lancement de la capture full page", null, "chrome.runtime.onMessage");
-
-        captureFullPage(tabId, imageName)
-            .then(() => {
-                Logger.success("Capture réussie", { imageName }, "chrome.runtime.onMessage");
-                sendResponse({ ok: true });
-            })
-            .catch((err) => {
-                Logger.error("Erreur lors de la capture", err, "chrome.runtime.onMessage");
-                sendResponse({ ok: false, error: err.message });
-            });
-
-        Logger.groupEnd();
-        // Important pour que sendResponse fonctionne de façon asynchrone
-        return true;
-    }
 
     } catch (error) {
         Logger.error("Erreur dans le listener de messages background", error, "chrome.runtime.onMessage");
@@ -1155,11 +1155,11 @@ chrome.webRequest.onErrorOccurred.addListener(
             Logger.warning("Erreur proxy détectée", { error: details.error, url: details.url }, "chrome.webRequest.onErrorOccurred");
 
             if (!badProxyFileDownloaded) {
-                Logger.step("Téléchargement fichier bad_proxy", null, "chrome.webRequest.onErrorOccurred");
-                await openNewTabAndDownloadFile("bad_proxy");
+                Logger.step("Appel openNewTabAndDownloadFile (context=background)", null, "chrome.webRequest.onErrorOccurred");
+                await openNewTabAndDownloadFile("bad_proxy", "background");
                 badProxyFileDownloaded = true;
                 Logger.success("Fichier bad_proxy marqué comme téléchargé", null, "chrome.webRequest.onErrorOccurred");
-                throw new Error("🛑 HARD STOP: Exécution arrêtée après téléchargement bad_proxy"); // Arrêt forcé
+                throw new Error("🛑 HARD STOP: Proxy invalide détecté");
             } else {
                 Logger.debug("Fichier bad_proxy déjà téléchargé", null, "chrome.webRequest.onErrorOccurred");
             }
@@ -1175,78 +1175,93 @@ chrome.webRequest.onErrorOccurred.addListener(
 // ==========================
 // Gestion des downloads
 // ==========================
-async function openNewTabAndDownloadFile(etat) {
-    Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-    Logger.timeStart("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-    Logger.info("Début téléchargement fichier", { etat }, "openNewTabAndDownloadFile");
+// ✅ Daalé : openNewTabAndDownloadFile(etat, context)
+//    - Importée depuis utils.js
+//    - Contexte "background" : utilise Chrome Downloads API
+//    - Contexte "content" : utilise DOM manipulation
+//    - Détection automatique: typeof window === "undefined" ? "background" : "content"
+// }
 
-    try {
-        // Pause 3s avant traitement
-        // await new Promise(resolve => setTimeout(resolve, 3000));
 
-        // Lire data.txt
-        Logger.step("Lecture du fichier data.txt", null, "openNewTabAndDownloadFile");
-        const dataTxtPath = chrome.runtime.getURL("data.txt");
-        const response = await fetch(dataTxtPath);
-        if (!response.ok) {
-            Logger.error("Erreur téléchargement data.txt", { status: response.status, statusText: response.statusText }, "openNewTabAndDownloadFile");
-            throw new Error(`Erreur téléchargement data.txt: ${response.statusText}`);
-        }
 
-        const text = await response.text();
-        const lines = text.split("\n").map((l) => l.trim());
-        if (!lines[0]) {
-            Logger.error("Contenu data.txt invalide", { lines }, "openNewTabAndDownloadFile");
-            throw new Error("data.txt khawi ou invalid");
-        }
 
-        const session_id = lines[0];
-        Logger.success("Session ID récupéré", { session_id }, "openNewTabAndDownloadFile");
 
-        // Lire email men localStorage
-        Logger.step("Lecture email depuis localStorage", null, "openNewTabAndDownloadFile");
-        const stored = await chrome.storage.local.get("storedEmail");
-        const trimmedEmail = stored.storedEmail?.trim();
-        if (!trimmedEmail || !session_id) {
-            Logger.error("Valeurs manquantes", { trimmedEmail, session_id }, "openNewTabAndDownloadFile");
-            throw new Error("valeurs manquantes f data.txt");
-        }
-        Logger.success("Email récupéré", { email: trimmedEmail }, "openNewTabAndDownloadFile");
+// ==========================
+// Gestion des downloads
+// ==========================
 
-        // Contenu fichier
-        const fileContent = `session_id:${session_id}_Email:${trimmedEmail}_etat:${etat}`;
-        Logger.debug("Contenu du fichier généré", { fileContent }, "openNewTabAndDownloadFile");
+// async function openNewTabAndDownloadFile(etat) {
+//     Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//     Logger.timeStart("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//     Logger.info("Début téléchargement fichier", { etat }, "openNewTabAndDownloadFile");
 
-        const blob = new Blob([fileContent], { type: "text/plain" });
+//     try {
+//         // Pause 3s avant traitement
+//         // await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const dataUrl = reader.result;
+//         // Lire data.txt
+//         Logger.step("Lecture du fichier data.txt", null, "openNewTabAndDownloadFile");
+//         const dataTxtPath = chrome.runtime.getURL("data.txt");
+//         const response = await fetch(dataTxtPath);
+//         if (!response.ok) {
+//             Logger.error("Erreur téléchargement data.txt", { status: response.status, statusText: response.statusText }, "openNewTabAndDownloadFile");
+//             throw new Error(`Erreur téléchargement data.txt: ${response.statusText}`);
+//         }
 
-            // Filename dynamique : session_id_email_etat.txt
-            const filename = `${session_id}_${trimmedEmail}_${etat}.txt`;
-            Logger.step("Téléchargement du fichier", { filename }, "openNewTabAndDownloadFile");
+//         const text = await response.text();
+//         const lines = text.split("\n").map((l) => l.trim());
+//         if (!lines[0]) {
+//             Logger.error("Contenu data.txt invalide", { lines }, "openNewTabAndDownloadFile");
+//             throw new Error("data.txt khawi ou invalid");
+//         }
 
-            chrome.downloads.download({
-                url: dataUrl,
-                filename: filename,
-                conflictAction: "uniquify",
-                saveAs: false,
-            }, (downloadId) => {
-                if (downloadId) {
-                    Logger.success("Téléchargement lancé", { downloadId, filename }, "openNewTabAndDownloadFile");
-                } else {
-                    Logger.error("Échec du téléchargement", chrome.runtime.lastError, "openNewTabAndDownloadFile");
-                }
-            });
-        };
-        reader.readAsDataURL(blob);
+//         const session_id = lines[0];
+//         Logger.success("Session ID récupéré", { session_id }, "openNewTabAndDownloadFile");
 
-    } catch (error) {
-        Logger.error("Erreur dans openNewTabAndDownloadFile", error, "openNewTabAndDownloadFile");
-    }
+//         // Lire email men localStorage
+//         Logger.step("Lecture email depuis localStorage", null, "openNewTabAndDownloadFile");
+//         const stored = await chrome.storage.local.get("storedEmail");
+//         const trimmedEmail = stored.storedEmail?.trim();
+//         if (!trimmedEmail || !session_id) {
+//             Logger.error("Valeurs manquantes", { trimmedEmail, session_id }, "openNewTabAndDownloadFile");
+//             throw new Error("valeurs manquantes f data.txt");
+//         }
+//         Logger.success("Email récupéré", { email: trimmedEmail }, "openNewTabAndDownloadFile");
 
-    Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-    Logger.groupEnd();
-}
+//         // Contenu fichier
+//         const fileContent = `session_id:${session_id}_Email:${trimmedEmail}_etat:${etat}`;
+//         Logger.debug("Contenu du fichier généré", { fileContent }, "openNewTabAndDownloadFile");
+
+//         const blob = new Blob([fileContent], { type: "text/plain" });
+
+//         const reader = new FileReader();
+//         reader.onloadend = () => {
+//             const dataUrl = reader.result;
+
+//             // Filename dynamique : session_id_email_etat.txt
+//             const filename = `${session_id}_${trimmedEmail}_${etat}.txt`;
+//             Logger.step("Téléchargement du fichier", { filename }, "openNewTabAndDownloadFile");
+
+//             chrome.downloads.download({
+//                 url: dataUrl,
+//                 filename: filename,
+//                 conflictAction: "uniquify",
+//                 saveAs: false,
+//             }, (downloadId) => {
+//                 if (downloadId) {
+//                     Logger.success("Téléchargement lancé", { downloadId, filename }, "openNewTabAndDownloadFile");
+//                 } else {
+//                     Logger.error("Échec du téléchargement", chrome.runtime.lastError, "openNewTabAndDownloadFile");
+//                 }
+//             });
+//         };
+//         reader.readAsDataURL(blob);
+
+//     } catch (error) {
+//         Logger.error("Erreur dans openNewTabAndDownloadFile", error, "openNewTabAndDownloadFile");
+//     }
+
+//     Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//     Logger.groupEnd();
+// }
 

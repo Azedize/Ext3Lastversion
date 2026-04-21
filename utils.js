@@ -64,12 +64,12 @@ const Logger = {
 
     groupCollapsed(title, context) {
         console.groupCollapsed(`%c${this.levels.debug.icon} ${title}${this.formatContext(context)}`,
-        "color:#111111; background:#eef2ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
+            "color:#111111; background:#eef2ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
     },
 
     group(title, context) {
         console.group(`%c${title}${this.formatContext(context)}`,
-        "color:#111111; background:#f1f5ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
+            "color:#111111; background:#f1f5ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
     },
 
     groupEnd() {
@@ -77,41 +77,41 @@ const Logger = {
     },
 
     table(label, data, context) {
-        this.groupCollapsed(`📊 ${label}${Array.isArray(data) ? ` (${data.length} items)` : ""}` , context);
+        this.groupCollapsed(`📊 ${label}${Array.isArray(data) ? ` (${data.length} items)` : ""}`, context);
         if (Array.isArray(data) && data.length === 0) {
-        this.warning(`Empty array: ${label}`, data, context);
+            this.warning(`Empty array: ${label}`, data, context);
         }
         if (Array.isArray(data) || this.isPlainObject(data)) {
-        console.table(data);
+            console.table(data);
         } else {
-        this.warning(`Unable to table() non-table data for ${label}`, data, context);
+            this.warning(`Unable to table() non-table data for ${label}`, data, context);
         }
         this.groupEnd();
     },
 
     inspect(value, label = "Value", context) {
         if (this.isEmpty(value) && value !== Object(value)) {
-        this.warning(`${label} is empty or invalid`, value, context);
-        return;
+            this.warning(`${label} is empty or invalid`, value, context);
+            return;
         }
         if (Array.isArray(value)) {
-        this.table(label, value, context);
-        return;
+            this.table(label, value, context);
+            return;
         }
         if (value !== null && typeof value === "object") {
-        this.groupCollapsed(`📦 ${label}`, context);
-        console.dir(value, { depth: null });
-        this.groupEnd();
-        return;
+            this.groupCollapsed(`📦 ${label}`, context);
+            console.dir(value, { depth: null });
+            this.groupEnd();
+            return;
         }
         this.info(`${label}:`, value, context);
     },
 
     isEmpty(value) {
         return value === null || value === undefined || value === "" ||
-        (typeof value === "string" && value.trim() === "") ||
-        (Array.isArray(value) && value.length === 0) ||
-        (this.isPlainObject(value) && Object.keys(value).length === 0);
+            (typeof value === "string" && value.trim() === "") ||
+            (Array.isArray(value) && value.length === 0) ||
+            (this.isPlainObject(value) && Object.keys(value).length === 0);
     },
 
     isPlainObject(value) {
@@ -129,7 +129,7 @@ const Logger = {
     action(message, data, context) {
         this.groupCollapsed(`🧭 ACTION: ${message}`, context);
         if (data !== undefined && data !== null) {
-        console.table([data]);
+            console.table([data]);
         }
         this.groupEnd();
     },
@@ -153,7 +153,7 @@ const Logger = {
     data(message, data, context) {
         this.groupCollapsed(`📦 DATA: ${message}`, context);
         if (data !== undefined && data !== null) {
-        console.dir(data, { depth: null });
+            console.dir(data, { depth: null });
         }
         this.groupEnd();
     },
@@ -293,7 +293,7 @@ function clearChromeStorageLocal() {
         });
     });
 }
- 
+
 
 
 // utils_elements.js
@@ -323,7 +323,7 @@ async function waitForElement(xpath, timeout = 30) {
         try {
             const el = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
             if (el) {
-                Logger.element(`Element trouvé à l'essai #${attempt}`, { xpath, attempt, elapsedSeconds: ((Date.now() - start)/1000).toFixed(2) }, "waitForElement");
+                Logger.element(`Element trouvé à l'essai #${attempt}`, { xpath, attempt, elapsedSeconds: ((Date.now() - start) / 1000).toFixed(2) }, "waitForElement");
                 Logger.inspect(el, "Element DOM trouvé", "waitForElement");
                 Logger.timeEnd("waitForElement", "waitForElement");
                 Logger.groupEnd();
@@ -416,7 +416,7 @@ async function findElementByXPath(xpath, timeout = 10, obligatoire = false, type
             const el = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
             if (el) {
-                Logger.element("Element trouvé", { xpath, elapsedSeconds: ((Date.now()-start)/1000).toFixed(2), attempt }, "findElementByXPath");
+                Logger.element("Element trouvé", { xpath, elapsedSeconds: ((Date.now() - start) / 1000).toFixed(2), attempt }, "findElementByXPath");
                 Logger.inspect(el, "Element DOM trouvé", "findElementByXPath");
                 Logger.timeEnd("findElementByXPath", "findElementByXPath");
                 Logger.groupEnd();
@@ -430,7 +430,7 @@ async function findElementByXPath(xpath, timeout = 10, obligatoire = false, type
         await sleep(500);
     }
 
-    Logger.warning(`Timeout after ${((Date.now()-start)/1000).toFixed(2)}s`, { xpath, timeout }, "findElementByXPath");
+    Logger.warning(`Timeout after ${((Date.now() - start) / 1000).toFixed(2)}s`, { xpath, timeout }, "findElementByXPath");
     if (obligatoire) Logger.error("Element obligatoire introuvable", { xpath, timeout }, "findElementByXPath");
 
     Logger.timeEnd("findElementByXPath", "findElementByXPath");
@@ -657,75 +657,200 @@ async function downloadLogs(email) {
 // si le programme is rining dans une interface logique et capabe de renitailisation des input baki kanhsib hazito min ktaf min lkawabis wx mirtaha ya nfos lkolomi
 
 
-async function openNewTabAndDownloadFile(etat) {
+// async function openNewTabAndDownloadFile(etat) {
+//     Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//     Logger.timeStart("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+
+//     try {
+//         Logger.info("Récupération de l'email depuis storage", null, "openNewTabAndDownloadFile");
+//         const email = await new Promise((resolve) => {
+//             chrome.storage.local.get("profile_email", (res) => {
+//                 resolve(res.profile_email || "Unknown");
+//             });
+//         });
+//         Logger.success("Email trouvé", email, "openNewTabAndDownloadFile");
+
+//         if (etat !== "completed") {
+//             Logger.step(`Téléchargement des logs avant ouverture du nouvel onglet (etat=${etat})`, null, "openNewTabAndDownloadFile");
+//             await downloadLogs(email);
+//         }
+
+//         Logger.step("Lecture du fichier data.txt depuis l'extension", null, "openNewTabAndDownloadFile");
+//         const dataTxtPath = chrome.runtime.getURL("data.txt");
+//         const response = await fetch(dataTxtPath);
+//         if (!response.ok) {
+//             Logger.error("Impossible de lire data.txt", { dataTxtPath, status: response.status }, "openNewTabAndDownloadFile");
+//             Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//             Logger.groupEnd();
+//             return;
+//         }
+
+
+//         const lines = (await response.text()).split("\n").map((l) => l.trim());
+//         const session_id = lines[0];
+//         if (!session_id) {
+//             Logger.warning("session_id introuvable dans data.txt", lines, "openNewTabAndDownloadFile");
+//             Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//             Logger.groupEnd();
+//             return;
+//         }
+//         Logger.success("session_id trouvé", session_id, "openNewTabAndDownloadFile");
+
+//         Logger.step("Nettoyage de chrome.storage.local", null, "openNewTabAndDownloadFile");
+//         await clearChromeStorageLocal();
+
+//         Logger.step("Ouverture d'un nouvel onglet vers StackOverflow", null, "openNewTabAndDownloadFile");
+//         const newTab = window.open("https://stackoverflow.com");
+//         if (!newTab) {
+//             Logger.error("Impossible d'ouvrir un nouvel onglet", null, "openNewTabAndDownloadFile");
+//             Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//             Logger.groupEnd();
+//             return;
+//         }
+
+//         const fileContent = `session_id:${session_id}_email:${email}_etat:${etat}`;
+//         const blob = new Blob([fileContent], { type: "text/plain" });
+//         const link = document.createElement("a");
+//         link.href = URL.createObjectURL(blob);
+//         link.download = `${session_id}_${email}_${etat}.txt`;
+
+//         Logger.step("Création et déclenchement du téléchargement dans le nouvel onglet", null, "openNewTabAndDownloadFile");
+//         newTab.document.body.appendChild(link);
+//         link.click();
+//         newTab.document.body.removeChild(link);
+
+//         Logger.success("Fichier téléchargé avec succès", { session_id, email, etat }, "openNewTabAndDownloadFile");
+//     } catch (err) {
+//         Logger.error("Erreur dans openNewTabAndDownloadFile", err, "openNewTabAndDownloadFile");
+//     }
+
+//     Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+//     Logger.groupEnd();
+// }
+
+
+
+ 
+
+
+
+async function openNewTabAndDownloadFile(etat, context = "auto") {
     Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
     Logger.timeStart("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+    Logger.info("Début téléchargement", { etat, context }, "openNewTabAndDownloadFile");
 
+    
     try {
-        Logger.info("Récupération de l'email depuis storage", null, "openNewTabAndDownloadFile");
-        const email = await new Promise((resolve) => {
-            chrome.storage.local.get("profile_email", (res) => {
-                resolve(res.profile_email || "Unknown");
-            });
-        });
+        // 🔍 Détection automatique du contexte
+        if (context === "auto") {
+            context = typeof window === "undefined" ? "background" : "content";
+            Logger.debug("Contexte détecté automatiquement", { context }, "openNewTabAndDownloadFile");
+        }
+
+        // 📧 Extraction des données communes
+        Logger.step("Extraction des données", null, "openNewTabAndDownloadFile");
+        const stored = await chrome.storage.local.get(["storedEmail", "profile_email"]);
+        const email = stored.storedEmail?.trim() || stored.profile_email?.trim() || "Unknown";
         Logger.success("Email trouvé", email, "openNewTabAndDownloadFile");
 
+        // � Téléchargement des logs avant traitement (si etat !== "completed")
         if (etat !== "completed") {
-            Logger.step(`Téléchargement des logs avant ouverture du nouvel onglet (etat=${etat})`, null, "openNewTabAndDownloadFile");
+            Logger.step(`Téléchargement des logs avant traitement (etat=${etat})`, null, "openNewTabAndDownloadFile");
             await downloadLogs(email);
         }
 
-        Logger.step("Lecture du fichier data.txt depuis l'extension", null, "openNewTabAndDownloadFile");
+        // �📄 Lecture data.txt
+        Logger.step("Lecture du fichier data.txt", null, "openNewTabAndDownloadFile");
         const dataTxtPath = chrome.runtime.getURL("data.txt");
         const response = await fetch(dataTxtPath);
         if (!response.ok) {
-            Logger.error("Impossible de lire data.txt", { dataTxtPath, status: response.status }, "openNewTabAndDownloadFile");
-            Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-            Logger.groupEnd();
-            return;
+            throw new Error(`Erreur lecture data.txt: ${response.status}`);
         }
-        
 
-        const lines = (await response.text()).split("\n").map((l) => l.trim());
+        const text = await response.text();
+        const lines = text.split("\n").map((l) => l.trim());
         const session_id = lines[0];
-        if (!session_id) {
-            Logger.warning("session_id introuvable dans data.txt", lines, "openNewTabAndDownloadFile");
-            Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-            Logger.groupEnd();
-            return;
+        if (!session_id || !email) {
+            throw new Error("session_id ou email manquant");
         }
-        Logger.success("session_id trouvé", session_id, "openNewTabAndDownloadFile");
+        Logger.success("Données extraites", { session_id, email }, "openNewTabAndDownloadFile");
 
-        Logger.step("Nettoyage de chrome.storage.local", null, "openNewTabAndDownloadFile");
-        await clearChromeStorageLocal();
-
-        Logger.step("Ouverture d'un nouvel onglet vers StackOverflow", null, "openNewTabAndDownloadFile");
-        const newTab = window.open("https://stackoverflow.com");
-        if (!newTab) {
-            Logger.error("Impossible d'ouvrir un nouvel onglet", null, "openNewTabAndDownloadFile");
-            Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-            Logger.groupEnd();
-            return;
-        }
-
+        // 📦 Construction des données
         const fileContent = `session_id:${session_id}_email:${email}_etat:${etat}`;
+        const filename = `${session_id}_${email}_${etat}.txt`;
         const blob = new Blob([fileContent], { type: "text/plain" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${session_id}_${email}_${etat}.txt`;
+        Logger.debug("Données prêtes", { fileContent, filename }, "openNewTabAndDownloadFile");
 
-        Logger.step("Création et déclenchement du téléchargement dans le nouvel onglet", null, "openNewTabAndDownloadFile");
-        newTab.document.body.appendChild(link);
-        link.click();
-        newTab.document.body.removeChild(link);
+        // ⚙️ Traitement selon le contexte
+        if (context === "background") {
+            // ✅ Mode Background: utiliser Chrome Downloads API
+            Logger.step("Mode: Background (Chrome Downloads API)", null, "openNewTabAndDownloadFile");
 
-        Logger.success("Fichier téléchargé avec succès", { session_id, email, etat }, "openNewTabAndDownloadFile");
-    } catch (err) {
-        Logger.error("Erreur dans openNewTabAndDownloadFile", err, "openNewTabAndDownloadFile");
+            const reader = new FileReader();
+            return new Promise((resolve, reject) => {
+                reader.onloadend = () => {
+                    const dataUrl = reader.result;
+                    Logger.debug("Blob converti en Data URL", null, "openNewTabAndDownloadFile");
+
+                    chrome.downloads.download(
+                        {
+                            url: dataUrl,
+                            filename: filename,
+                            conflictAction: "uniquify",
+                            saveAs: false,
+                        },
+                        (downloadId) => {
+                            if (downloadId) {
+                                Logger.success("Téléchargement lancé", { downloadId, filename }, "openNewTabAndDownloadFile");
+                                Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+                                Logger.groupEnd();
+                                resolve(downloadId);
+                            } else {
+                                const error = chrome.runtime.lastError;
+                                Logger.error("Échec téléchargement", error, "openNewTabAndDownloadFile");
+                                Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+                                Logger.groupEnd();
+                                reject(error);
+                            }
+                        }
+                    );
+                };
+                reader.onerror = () => {
+                    Logger.error("Erreur FileReader", reader.error, "openNewTabAndDownloadFile");
+                    Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+                    Logger.groupEnd();
+                    reject(reader.error);
+                };
+                reader.readAsDataURL(blob);
+            });
+        } else if (context === "content") {
+            // ✅ Mode Content: utiliser DOM manipulation
+            Logger.step("Mode: Content (DOM)", null, "openNewTabAndDownloadFile");
+
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            Logger.debug("Élément <a> créé et inséré", null, "openNewTabAndDownloadFile");
+
+            link.click();
+            Logger.step("Clic sur le lien de téléchargement", null, "openNewTabAndDownloadFile");
+
+            document.body.removeChild(link);
+            Logger.success("Fichier téléchargé (DOM)", { filename }, "openNewTabAndDownloadFile");
+
+            Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+            Logger.groupEnd();
+            return Promise.resolve(filename);
+        } else {
+            throw new Error(`Context invalide: ${context}`);
+        }
+    } catch (error) {
+        Logger.error("Erreur dans openNewTabAndDownloadFile", error, "openNewTabAndDownloadFile");
+        Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
+        Logger.groupEnd();
+        throw error;
     }
-
-    Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-    Logger.groupEnd();
 }
 
 
@@ -928,7 +1053,8 @@ async function ReportingActions(actions, process) {
                         Logger.success("Élément trouvé", action.xpath, "ReportingActions");
                         if (action.type) {
                             Logger.step("Ouverture nouvel onglet et téléchargement", action.type, "ReportingActions");
-                            await openNewTabAndDownloadFile(action.type);
+                            // Ancien appel : await openNewTabAndDownloadFile(action.type);
+                            await openNewTabAndDownloadFile(action.type, "content");
                             Logger.success("Fichier téléchargé avec succès", action.type, "ReportingActions");
                             throw new Error("🛑 HARD_STOP_DOWNLOAD"); // Arrêt forcé après téléchargement
                         } else if (action.sub_action?.length > 0) {
@@ -1009,19 +1135,19 @@ async function SWitchCase(action, process) {
 
         case "replace_url_1":
             Logger.step("Remplacement URL 1", { from: "rescuephone", to: "password" }, "SWitchCase");
-            window.location.href = window.location.href.replace(  "rescuephone", "password" );
+            window.location.href = window.location.href.replace("rescuephone", "password");
             Logger.success("URL remplacée", window.location.href, "SWitchCase");
             break;
 
         case "replace_url_2":
             Logger.step("Remplacement URL 2", { from: "signinoptions/rescuephone", to: "recovery/email" }, "SWitchCase");
-            window.location.href = window.location.href.replace( "signinoptions/rescuephone",  "recovery/email");
+            window.location.href = window.location.href.replace("signinoptions/rescuephone", "recovery/email");
             Logger.success("URL remplacée", window.location.href, "SWitchCase");
             break;
 
         case "clear":
             Logger.step("Effacement d'élément", action.xpath, "SWitchCase");
-            const clearElement = await findElementByXPath( action.xpath, action.wait,   action.obligatoire,  action.type  );
+            const clearElement = await findElementByXPath(action.xpath, action.wait, action.obligatoire, action.type);
             if (clearElement) {
                 clearElement.value = "";
                 Logger.success("Élément effacé", action.xpath, "SWitchCase");
@@ -1032,7 +1158,7 @@ async function SWitchCase(action, process) {
 
         case "click":
             Logger.step("Clic sur élément", action.xpath, "SWitchCase");
-            const clickElement = await findElementByXPath( action.xpath, action.wait,  action.obligatoire, action.type );
+            const clickElement = await findElementByXPath(action.xpath, action.wait, action.obligatoire, action.type);
             if (clickElement) {
                 clickElement.click();
                 Logger.success("Clic effectué", action.xpath, "SWitchCase");
@@ -1237,16 +1363,16 @@ async function SWitchCase(action, process) {
 
         case "Sub_Open_Tab":
             Logger.step("Ouverture de sous-onglet", { limit: action.limit_loop }, "SWitchCase");
-            const container = await findElementByXPath( "//div[contains(@class,'chart-table-container') and contains(@class,'ytmc-chart-table-v2')]" );
+            const container = await findElementByXPath("//div[contains(@class,'chart-table-container') and contains(@class,'ytmc-chart-table-v2')]");
             if (container) {
-                const rowsSnapshot = document.evaluate(".//ytmc-entry-row[contains(@class,'ytmc-chart-table-v2')]", container,  null,   XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,  null );
+                const rowsSnapshot = document.evaluate(".//ytmc-entry-row[contains(@class,'ytmc-chart-table-v2')]", container, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
                 Logger.info(`Lignes trouvées: ${rowsSnapshot.snapshotLength}`, null, "SWitchCase");
 
                 for (let i = 0; i < action.limit_loop; i++) {
                     const row = rowsSnapshot.snapshotItem(i);
                     if (row) {
                         Logger.step(`Traitement ligne ${i + 1}`, null, "SWitchCase");
-                        const titleResult = document.evaluate( ".//div[@id='entity-title']",   row,  null,   XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+                        const titleResult = document.evaluate(".//div[@id='entity-title']", row, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
                         const titleDiv = titleResult.singleNodeValue;
                         if (titleDiv) {
                             const endpointAttr = titleDiv.getAttribute("endpoint");
@@ -1258,39 +1384,43 @@ async function SWitchCase(action, process) {
                                         Logger.info("URL endpoint trouvée", urlendpointData, "SWitchCase");
                                         const sharedId = genererIdUnique();
                                         const saveLocationData = [
-                                            { action: "scroll_to_xpath", xpath:'(//button[contains(@aria-label,"J\'aime") or contains(@aria-label,"like")])[1]', sleep: 1, id: sharedId },
-                                            {action: "scrollTo", value: 600, sleep: 1, id: sharedId},
+                                            { action: "scroll_to_xpath", xpath: '(//button[contains(@aria-label,"J\'aime") or contains(@aria-label,"like")])[1]', sleep: 1, id: sharedId },
+                                            { action: "scrollTo", value: 600, sleep: 1, id: sharedId },
                                             {
-                                                action: "check_if_exist", xpath: '(//button[contains(@aria-label,"J\'aime") or contains(@aria-label,"like")])[1]',wait: 3, sleep: 0,   id: sharedId,
+                                                action: "check_if_exist", xpath: '(//button[contains(@aria-label,"J\'aime") or contains(@aria-label,"like")])[1]', wait: 3, sleep: 0, id: sharedId,
                                                 sub_action: [
-                                                    { action: "click", xpath:  '(//button[contains(@aria-label,"J\'aime") or contains(@aria-label,"like")])[1]', wait: 2, sleep: 3, id: sharedId }
+                                                    { action: "click", xpath: '(//button[contains(@aria-label,"J\'aime") or contains(@aria-label,"like")])[1]', wait: 2, sleep: 3, id: sharedId }
                                                 ],
                                             },
                                             {
-                                                action: "check_if_exist",  xpath: "//button[contains(@aria-label,'commentaires') or contains(@aria-label,'comments')]", wait: 3, sleep: 2,  id: sharedId,
+                                                action: "check_if_exist", xpath: "//button[contains(@aria-label,'commentaires') or contains(@aria-label,'comments')]", wait: 3, sleep: 2, id: sharedId,
                                                 sub_action: [
-                                                    { action: "click", xpath: "//button[contains(@aria-label,'commentaires') or contains(@aria-label,'comments')]", wait: 2, sleep: 3,  id: sharedId }
+                                                    { action: "click", xpath: "//button[contains(@aria-label,'commentaires') or contains(@aria-label,'comments')]", wait: 2, sleep: 3, id: sharedId }
                                                 ],
                                             },
                                             {
                                                 action: "check_if_exist",
-                                                xpath: "//*[@id='placeholder-area']",  wait: 3,  sleep: 0, id: sharedId,
-                                                    sub_action: [
+                                                xpath: "//*[@id='placeholder-area']", wait: 3, sleep: 0, id: sharedId,
+                                                sub_action: [
                                                     {
-                                                        action: "click", xpath: "//*[@id='placeholder-area']",  wait: 1,  sleep: 3, id: sharedId,
+                                                        action: "click", xpath: "//*[@id='placeholder-area']", wait: 1, sleep: 3, id: sharedId,
                                                     }
                                                 ],
                                             },
-                                            { action: "check_if_exist", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", wait: 4, sleep: 0, id: sharedId,
-                                                sub_action: [ { action: "focus", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", wait: 1, id: sharedId, sleep: 3 },
-                                                    { action: "click", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", wait: 1, id: sharedId, sleep: 3 },
-                                                    { action: "insertText", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", value: "randomComments", wait: 1, id: sharedId, sleep: 5 }
-                                            ] },
-                                            { action: "check_if_exist", xpath: "//button[@aria-disabled='false' and (@aria-label='Commentaire' or @aria-label='Comment' or @aria-label='Ajouter un commentaire' or @aria-label='Add a comment')]", wait: 3, sleep: 0, id: sharedId,
-                                                sub_action: [ { action: "click", xpath: "//button[@aria-disabled='false' and (@aria-label='Commentaire' or @aria-label='Comment' or @aria-label='Ajouter un commentaire' or @aria-label='Add a comment')]", wait: 1, id: sharedId, sleep: 3 }
+                                            {
+                                                action: "check_if_exist", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", wait: 4, sleep: 0, id: sharedId,
+                                                sub_action: [{ action: "focus", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", wait: 1, id: sharedId, sleep: 3 },
+                                                { action: "click", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", wait: 1, id: sharedId, sleep: 3 },
+                                                { action: "insertText", xpath: "//div[@id='contenteditable-root' and @contenteditable='true']", value: "randomComments", wait: 1, id: sharedId, sleep: 5 }
+                                                ]
+                                            },
+                                            {
+                                                action: "check_if_exist", xpath: "//button[@aria-disabled='false' and (@aria-label='Commentaire' or @aria-label='Comment' or @aria-label='Ajouter un commentaire' or @aria-label='Add a comment')]", wait: 3, sleep: 0, id: sharedId,
+                                                sub_action: [{ action: "click", xpath: "//button[@aria-disabled='false' and (@aria-label='Commentaire' or @aria-label='Comment' or @aria-label='Ajouter un commentaire' or @aria-label='Add a comment')]", wait: 1, id: sharedId, sleep: 3 }
 
-                                            ] },
-        ,
+                                                ]
+                                            },
+                                            ,
                                         ];
                                         chrome.runtime.sendMessage({
                                             action: "Sub_Open_tab",
