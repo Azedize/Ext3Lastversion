@@ -2,6 +2,8 @@ importScripts("utils.js");
 
 
 
+
+
 //========================================
 // captureFullPage :
 // ========================================
@@ -113,6 +115,10 @@ async function captureFullPage(tabId, imageName) {
     Logger.groupEnd();
 }
 
+
+
+
+
 function sendMessageToContentScript(tabId, message, onSuccess, onError) {
     Logger.debug("Envoi message au content script", { tabId, action: message?.action }, "sendMessageToContentScript");
 
@@ -140,6 +146,9 @@ const PASSWORD = "A9!fP3z$wQ8@rX7kM2#dN6^bH1&yL4t*";
 
 const processingTabs = {};
 
+
+
+
 // ======================================
 // ⚙️ Sauvegarde et application du proxy
 // ======================================
@@ -158,6 +167,12 @@ function configureProxyDirectly(host, port, user, pass) {
         applyProxySettings(proxySettings);
     });
 }
+
+
+
+
+
+
 
 // =============================================
 // 🛠️ Appliquer la config et gérer l'auth proxy
@@ -207,6 +222,8 @@ function applyProxySettings(proxySetting) {
     );
 }
 
+
+
 // ===========================
 // 🔄 Fonctions utilitaires
 // ===========================
@@ -223,12 +240,22 @@ function hexToBytes(hex) {
     return bytes;
 }
 
+
+
+
+
+
+
 // ===========================
 // Retourne une chaîne de caractères à partir d'un tableau d'octets
 // ===========================
 function bytesToString(bytes) {
     return new TextDecoder().decode(bytes);
 }
+
+
+
+
 
 // ===========================
 // Retourne une clé AES-GCM à partir du mot de passe et de la chaîne de salage
@@ -254,6 +281,10 @@ async function deriveKey(password, saltBytes) {
         ["decrypt", "encrypt"],
     );
 }
+
+
+
+
 
 // ===========================
 // Décrypte un message AES-GCM
@@ -290,6 +321,11 @@ async function decryptAESGCM(password, hexPayload) {
     }
 }
 
+
+
+
+
+
 // ===========================
 // Retourne vrai si la chaine de caractères est un hexadécimal
 // ===========================
@@ -304,6 +340,9 @@ function looksLikeEncryptedHex(s) {
     return isHex;
 }
 
+
+
+
 // ===========================
 // Role : Attendre un certain temps
 // ===========================
@@ -311,6 +350,10 @@ async function sleep(ms) {
     Logger.debug("Pause", { duration: ms }, "sleep");
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+
+
+
 
 // =============================
 // Enregistre un message de log
@@ -324,6 +367,12 @@ function saveLog(message) {
         Logger.success("Log sauvegardé", { logCount: updatedLogs.length }, "saveLog");
     });
 }
+
+
+
+
+
+
 
 // ===================================
 // Retourne un proxy extrait de l'url
@@ -448,6 +497,10 @@ async function extractProxyFromUrl(url, tabId, sendNow = true) {
     }
 }
 
+
+
+
+
 // ===========================
 // Gestion des tabs
 // ===========================
@@ -456,10 +509,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     Logger.groupCollapsed(`Tab Updated: ${tabId}`, "chrome.tabs.onUpdated");
     Logger.debug("Tab mis à jour", { tabId, changeInfo, url: tab.url }, "chrome.tabs.onUpdated");
 
-    if (
-        changeInfo.status !== "complete" ||
-        tab.url !== "https://www.youtube.com/"
-    ) {
+    if (changeInfo.status !== "complete" || tab.url !== "https://www.youtube.com/") {
         Logger.debug("Conditions non remplies pour traitement YouTube", { status: changeInfo.status, url: tab.url }, "chrome.tabs.onUpdated");
         Logger.groupEnd();
         return;
@@ -513,61 +563,156 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     Logger.groupEnd();
 });
 
+
+
+
+
 // ===========================
 // Gestion des tabs
 // ===========================
+// Attendre chaque création de tab, qu’elle soit créée par l’utilisateur ou automatiquement par le système.
+
+//     Dans`chrome.tabs.onCreated`, vérifier systématiquement si le tab contient un `dataToSend` valide avant de lancer le traitement(`chrome.tabs.create`).
+
+//         Si `dataToSend` est invalide, vide ou introuvable:
+
+// * ne pas démarrer le process immédiatement,
+// * continuer à surveiller les nouveaux tabs créés pendant une durée maximale de 15 secondes,
+// * durant cette période, vérifier chaque nouveau tab créé afin de détecter un dataset valide.
+
+// Le système doit continuer le check jusqu’à 15 secondes maximum.
+
+//     Après 15 secondes:
+
+// * récupérer tous les tabs actuellement ouverts,
+// * effectuer un refresh / reload de chaque tab avec son URL actuelle,
+// * conserver exactement les URLs existantes sans les modifier,
+// * éviter absolument les boucles infinies de reload ou de navigation.
+
+// Le code doit être stable, optimisé, éviter les conflits async et nettoyer correctement les états de traitement.
+
+
+
+// ===========================
+// STATE
+// ===========================
+
+let monitoringActive = false;
+let processDone = false;
+
+
+// ===========================
+// START 15s WATCHER
+// ===========================
+
+function start15sWatcher() {
+    if (monitoringActive) return;
+
+    monitoringActive = true;
+    processDone = false;
+
+    Logger.info("🟢 Start 15s monitoring", null, "watcher");
+
+    setTimeout(async () => {
+
+        Logger.warning("⏱ 15s finished", null, "watcher");
+
+        // ❗ refresh ONLY if no process was executed
+        if (!processDone) {
+            try {
+                const tabs = await chrome.tabs.query({});
+
+                for (const tab of tabs) {
+                    if (!tab.id || !tab.url) continue;
+
+                    Logger.step("🔄 Refresh tab", { tabId: tab.id }, "watcher");
+
+                    chrome.tabs.reload(tab.id);
+                }
+
+                Logger.success("✅ All tabs refreshed", { count: tabs.length }, "watcher");
+
+            } catch (err) {
+                Logger.error("❌ Refresh error", err, "watcher");
+            }
+        }
+
+        monitoringActive = false;
+
+    }, 15000);
+}
+
+
+// ===========================
+// TAB CREATED
+// ===========================
+
 chrome.tabs.onCreated.addListener(async (tab) => {
-    Logger.groupCollapsed(`Tab Created: ${tab.id}`, "chrome.tabs.onCreated");
-    Logger.info("Nouvel onglet créé", { tabId: tab.id, url: tab.pendingUrl || tab.url }, "chrome.tabs.onCreated");
+
+    Logger.groupCollapsed(`Tab Created: ${tab.id}`, "tabs");
 
     const url = tab.pendingUrl || tab.url;
+
+    // start 15s watcher once
+    start15sWatcher();
+
     if (processingTabs[tab.id]) {
-        Logger.debug("Onglet déjà en cours de traitement", { tabId: tab.id }, "chrome.tabs.onCreated");
+        Logger.debug("Already processing", { tabId: tab.id }, "tabs");
         Logger.groupEnd();
         return;
     }
 
     processingTabs[tab.id] = true;
-    Logger.debug("Marquage onglet en traitement", { tabId: tab.id }, "chrome.tabs.onCreated");
 
-    const dataToSend = await extractProxyFromUrl(url, tab.id, false);
+    let dataToSend = null;
+
+    try {
+        dataToSend = await extractProxyFromUrl(url, tab.id, false);
+    } catch (err) {
+        Logger.error("Extract error", err, "tabs");
+    }
+
+    // ===========================
+    // INVALID DATA → DO NOTHING
+    // ===========================
     if (!dataToSend) {
-        Logger.warning("Aucune donnée proxy extraite", { url }, "chrome.tabs.onCreated");
+        Logger.warning("No valid data → waiting 15s", { tabId: tab.id }, "tabs");
+
         delete processingTabs[tab.id];
+
         Logger.groupEnd();
         return;
     }
 
-    Logger.success("Données proxy extraites", { dataKeys: Object.keys(dataToSend) }, "chrome.tabs.onCreated");
+    // ===========================
+    // VALID DATA → NORMAL PROCESS
+    // ===========================
 
-    chrome.tabs.onCreated.hasListener && chrome.tabs.onCreated.removeListener();
+    processDone = true; 
+
+    Logger.success("Valid data found → process start", { tabId: tab.id }, "tabs");
 
     chrome.tabs.create({ url: "https://accounts.google.com/" }, (newTab) => {
-        Logger.step("Création onglet Google Accounts", { newTabId: newTab.id }, "chrome.tabs.onCreated");
-
-        chrome.tabs.query({}, (tabs) => {
-            const tabsToRemove = tabs.filter(t => t.id !== newTab.id);
-            Logger.info("Fermeture onglets existants", { count: tabsToRemove.length }, "chrome.tabs.onCreated");
-
-            tabsToRemove.forEach(t => chrome.tabs.remove(t.id));
-        });
 
         chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
+
             if (tabId === newTab.id && changeInfo.status === "complete") {
-                Logger.step("Onglet Google Accounts chargé", { tabId }, "chrome.tabs.onCreated");
+
                 chrome.tabs.onUpdated.removeListener(listener);
 
                 sendMessageToContentScript(
                     newTab.id,
                     { action: "startProcess", ...dataToSend },
+
                     () => {
-                        Logger.success("Processus démarré avec succès", { tabId: newTab.id }, "chrome.tabs.onCreated");
+                        Logger.success("Process OK", { tabId: newTab.id }, "tabs");
                         delete processingTabs[newTab.id];
                     },
+
                     () => {
-                        Logger.error("Échec démarrage processus", { tabId: newTab.id }, "chrome.tabs.onCreated");
+                        Logger.error("Process FAIL", { tabId: newTab.id }, "tabs");
                         delete processingTabs[newTab.id];
-                    },
+                    }
                 );
             }
         });
@@ -575,6 +720,9 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
     Logger.groupEnd();
 });
+
+
+
 
 // ===========================
 // Gestion des tabs
