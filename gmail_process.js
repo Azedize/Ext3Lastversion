@@ -161,7 +161,8 @@ const gmail_process = {
         {"action": "dispatchEvent", "xpath": "(//div[@gh='mtb']/div/div[count(div)=2][1]/div[1][count(div)=1] | //div[@gh='mtb']/div/div[count(div)=1][3]/div[1] | //div[@gh='mtb']/div[count(div)=1]/div/div[count(div)=1][3]/div[1] | //div[@gh='mtb']/div[count(div)=1]/div/div[count(div)=2]/div[1])[1]", "wait": 3, "sleep": 3}
     ],
     "click_link": [
-        {"action": "search_for_link_and_click", "xpath": "(//div[@data-message-id])[1]/div[2]/div[3]/div[3]/div[1]//a[@href]", "wait": 10, "sleep": 3},    ],
+        {"action": "search_for_link_and_click", "xpath": "(//div[@data-message-id])[1]/div[2]/div[3]/div[3]/div[1]//a[@href]", "wait": 10, "sleep": 3},    
+    ],
     
     "open_inbox": [
         {"action": "open_url", "url": "https://mail.google.com/mail/u/0/#inbox", "wait": 1, "sleep": 5  ,     
