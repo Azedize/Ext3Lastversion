@@ -311,10 +311,7 @@ const gmail_process = {
             "sub_action": [
                 {"action": "dispatchEventTwo", "xpath": "//div[@role='menuitem'and  not(@aria-hidden) and (contains(., 'Marquer comme favori') or contains(., 'Add star') or contains(., 'Activer le suivi') )]", "wait": 2, "sleep": 5}
             ]},
-    ],
-
-
-    
+    ],  
     "add_star_Select": [
         {"action": "check_if_exist", "xpath": "(//div[@role='button' and (@aria-label='More email options' or @aria-label=\"Plus d'options\" or @data-tooltip='More' or @data-tooltip='Plus' or @title='Plus') and @aria-expanded='false'])[last()]" , "wait": 1, "sleep": 0,
             "sub_action": [
@@ -335,8 +332,6 @@ const gmail_process = {
         {"action": "dispatchEvent", "xpath": "//div[@class='Cq aqL' and @gh='mtb']/div/div/div/div/div/div[@aria-hidden='true']", "wait": 10, "sleep": 1 },
         {"action": "dispatchEventTwo", "xpath": "//div/div[@gh='tm']//div[@selector='none' and @role='menuitem']", "wait": 3, "sleep": 1}
     ],
-
-
     "mark_as_read": [
         {"action": "dispatchEvent", "xpath": "//div[@role='button' and @aria-haspopup='true' and (@aria-label='More email options' or @aria-label=\"Plus d'options\" or @title='Plus')]", "wait": 5, "sleep": 1},
         {"action": "check_if_exist", "xpath": "//div[@role='menu' and @aria-haspopup='true' and not(contains(@style,'display: none;'))]/div[@class='SK AX']/div[28][@role='menuitem']", "wait": 1, "sleep": 0,
