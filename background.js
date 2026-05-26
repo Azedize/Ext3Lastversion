@@ -377,7 +377,6 @@ function saveLog(message) {
 // ===================================
 // Retourne un proxy extrait de l'url
 // ===================================
-
 async function extractProxyFromUrl(url, tabId, sendNow = true) {
     Logger.groupCollapsed("extractProxyFromUrl", "extractProxyFromUrl");
     Logger.timeStart("extractProxyFromUrl", "extractProxyFromUrl");
@@ -506,6 +505,7 @@ async function extractProxyFromUrl(url, tabId, sendNow = true) {
 // ===========================
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+
     Logger.groupCollapsed(`Tab Updated: ${tabId}`, "chrome.tabs.onUpdated");
     Logger.debug("Tab mis à jour", { tabId, changeInfo, url: tab.url }, "chrome.tabs.onUpdated");
 
@@ -517,7 +517,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
     Logger.step("Traitement onglet YouTube terminé", { tabId }, "chrome.tabs.onUpdated");
 
+    
     const { sentMessages } = await chrome.storage.local.get("sentMessages");
+
     if (!sentMessages || sentMessages.length === 0) {
         Logger.warning("Aucun message envoyé trouvé", null, "chrome.tabs.onUpdated");
         Logger.groupEnd();
@@ -529,7 +531,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     await sleep(5000);
 
     const isMonitoredTab = sentMessages.some((item) => item.TabId === tabId);
+
     if (!isMonitoredTab) {
+
         Logger.debug("Onglet non surveillé", { tabId }, "chrome.tabs.onUpdated");
         Logger.groupEnd();
         return;
@@ -538,6 +542,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     Logger.step("Fermeture onglet surveillé", { tabId }, "chrome.tabs.onUpdated");
 
     try {
+
         await chrome.tabs.remove(tabId);
         Logger.success("Onglet YouTube fermé", { tabId }, "chrome.tabs.onUpdated");
 
@@ -545,15 +550,16 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         Logger.success("Messages envoyés nettoyés", null, "chrome.tabs.onUpdated");
 
         if (callerTabId_CheckLoginYoutube) {
+
             Logger.step("Envoi message de fin CheckLogin", { callerTabId: callerTabId_CheckLoginYoutube }, "chrome.tabs.onUpdated");
-            await chrome.tabs.sendMessage(callerTabId_CheckLoginYoutube, {
-                action: "Closed_tab_Finished_CheckLoginYoutube",
-            });
+            await chrome.tabs.sendMessage(callerTabId_CheckLoginYoutube, {   action: "Closed_tab_Finished_CheckLoginYoutube" });
+
         }
 
         currentMapTabId_CheckLoginYoutube = null;
         callerTabId_CheckLoginYoutube = null;
         originalTabIds_CheckLoginYoutube = [];
+
         Logger.success("Variables CheckLogin nettoyées", null, "chrome.tabs.onUpdated");
 
     } catch (error) {
@@ -570,149 +576,60 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 // ===========================
 // Gestion des tabs
 // ===========================
-// Attendre chaque création de tab, qu’elle soit créée par l’utilisateur ou automatiquement par le système.
 
-//     Dans`chrome.tabs.onCreated`, vérifier systématiquement si le tab contient un `dataToSend` valide avant de lancer le traitement(`chrome.tabs.create`).
-
-//         Si `dataToSend` est invalide, vide ou introuvable:
-
-// * ne pas démarrer le process immédiatement,
-// * continuer à surveiller les nouveaux tabs créés pendant une durée maximale de 15 secondes,
-// * durant cette période, vérifier chaque nouveau tab créé afin de détecter un dataset valide.
-
-// Le système doit continuer le check jusqu’à 15 secondes maximum.
-
-//     Après 15 secondes:
-
-// * récupérer tous les tabs actuellement ouverts,
-// * effectuer un refresh / reload de chaque tab avec son URL actuelle,
-// * conserver exactement les URLs existantes sans les modifier,
-// * éviter absolument les boucles infinies de reload ou de navigation.
-
-// Le code doit être stable, optimisé, éviter les conflits async et nettoyer correctement les états de traitement.
-
-
-
-// ===========================
-// STATE
-// ===========================
-
-let monitoringActive = false;
-let processDone = false;
-
-
-// ===========================
-// START 15s WATCHER
-// ===========================
-
-function start15sWatcher() {
-    if (monitoringActive) return;
-
-    monitoringActive = true;
-    processDone = false;
-
-    Logger.info("🟢 Start 15s monitoring", null, "watcher");
-
-    setTimeout(async () => {
-
-        Logger.warning("⏱ 15s finished", null, "watcher");
-
-        // ❗ refresh ONLY if no process was executed
-        if (!processDone) {
-            try {
-                const tabs = await chrome.tabs.query({});
-
-                for (const tab of tabs) {
-                    if (!tab.id || !tab.url) continue;
-
-                    Logger.step("🔄 Refresh tab", { tabId: tab.id }, "watcher");
-
-                    chrome.tabs.reload(tab.id);
-                }
-
-                Logger.success("✅ All tabs refreshed", { count: tabs.length }, "watcher");
-
-            } catch (err) {
-                Logger.error("❌ Refresh error", err, "watcher");
-            }
-        }
-
-        monitoringActive = false;
-
-    }, 15000);
-}
-
-
-// ===========================
-// TAB CREATED
-// ===========================
 
 chrome.tabs.onCreated.addListener(async (tab) => {
-
-    Logger.groupCollapsed(`Tab Created: ${tab.id}`, "tabs");
+    Logger.groupCollapsed(`Tab Created: ${tab.id}`, "chrome.tabs.onCreated");
+    Logger.info("Nouvel onglet créé", { tabId: tab.id, url: tab.pendingUrl || tab.url }, "chrome.tabs.onCreated");
 
     const url = tab.pendingUrl || tab.url;
-
-    // start 15s watcher once
-    start15sWatcher();
-
     if (processingTabs[tab.id]) {
-        Logger.debug("Already processing", { tabId: tab.id }, "tabs");
+        Logger.debug("Onglet déjà en cours de traitement", { tabId: tab.id }, "chrome.tabs.onCreated");
         Logger.groupEnd();
         return;
     }
 
     processingTabs[tab.id] = true;
+    Logger.debug("Marquage onglet en traitement", { tabId: tab.id }, "chrome.tabs.onCreated");
 
-    let dataToSend = null;
-
-    try {
-        dataToSend = await extractProxyFromUrl(url, tab.id, false);
-    } catch (err) {
-        Logger.error("Extract error", err, "tabs");
-    }
-
-    // ===========================
-    // INVALID DATA → DO NOTHING
-    // ===========================
+    const dataToSend = await extractProxyFromUrl(url, tab.id, false);
     if (!dataToSend) {
-        Logger.warning("No valid data → waiting 15s", { tabId: tab.id }, "tabs");
-
+        Logger.warning("Aucune donnée proxy extraite", { url }, "chrome.tabs.onCreated");
         delete processingTabs[tab.id];
-
         Logger.groupEnd();
         return;
     }
 
-    // ===========================
-    // VALID DATA → NORMAL PROCESS
-    // ===========================
+    Logger.success("Données proxy extraites", { dataKeys: Object.keys(dataToSend) }, "chrome.tabs.onCreated");
 
-    processDone = true; 
-
-    Logger.success("Valid data found → process start", { tabId: tab.id }, "tabs");
+    chrome.tabs.onCreated.hasListener && chrome.tabs.onCreated.removeListener();
 
     chrome.tabs.create({ url: "https://accounts.google.com/" }, (newTab) => {
+        Logger.step("Création onglet Google Accounts", { newTabId: newTab.id }, "chrome.tabs.onCreated");
+
+        chrome.tabs.query({}, (tabs) => {
+            const tabsToRemove = tabs.filter(t => t.id !== newTab.id);
+            Logger.info("Fermeture onglets existants", { count: tabsToRemove.length }, "chrome.tabs.onCreated");
+
+            tabsToRemove.forEach(t => chrome.tabs.remove(t.id));
+        });
 
         chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
-
             if (tabId === newTab.id && changeInfo.status === "complete") {
-
+                Logger.step("Onglet Google Accounts chargé", { tabId }, "chrome.tabs.onCreated");
                 chrome.tabs.onUpdated.removeListener(listener);
 
                 sendMessageToContentScript(
                     newTab.id,
                     { action: "startProcess", ...dataToSend },
-
                     () => {
-                        Logger.success("Process OK", { tabId: newTab.id }, "tabs");
+                        Logger.success("Processus démarré avec succès", { tabId: newTab.id }, "chrome.tabs.onCreated");
                         delete processingTabs[newTab.id];
                     },
-
                     () => {
-                        Logger.error("Process FAIL", { tabId: newTab.id }, "tabs");
+                        Logger.error("Échec démarrage processus", { tabId: newTab.id }, "chrome.tabs.onCreated");
                         delete processingTabs[newTab.id];
-                    }
+                    },
                 );
             }
         });
@@ -720,6 +637,8 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
     Logger.groupEnd();
 });
+
+
 
 
 
@@ -990,27 +909,35 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
 //     }
 // });
 
+
+
+
+
 // =====================
 // Fonction sleep
 // =====================
+
+
+
+
 const sleep2 = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+
     Logger.groupCollapsed(`Message Background: ${message.action}`, "chrome.runtime.onMessage");
+
     Logger.timeStart(`Message-${message.action}`, "chrome.runtime.onMessage");
-    Logger.info("Nouveau message background reçu", {
-        action: message.action,
-        senderTabId: sender.tab?.id,
-        senderUrl: sender.tab?.url
-    }, "chrome.runtime.onMessage");
+
+    Logger.info("Nouveau message background reçu", {  action: message.action,  senderTabId: sender.tab?.id,  senderUrl: sender.tab?.url  }, "chrome.runtime.onMessage");
 
     try {
 
 
         // ==================== OPEN_TAB_CHECKLOGINYOUTUBE ====================
         if (message.action === "Open_tab_CheckLoginYoutube") {
+        
             Logger.step("Action: Open_tab_CheckLoginYoutube", { url: message.url }, "chrome.runtime.onMessage");
-            await sleep2(1000); // قبل الفتح
+            await sleep2(1000);
 
             const senderTabId = sender.tab?.id ?? null;
             Logger.debug("Sender tab ID", { senderTabId }, "chrome.runtime.onMessage");
@@ -1024,7 +951,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 }, "chrome.runtime.onMessage");
 
                 chrome.tabs.create({ url: message.url }, async (newTab) => {
-                    await sleep2(1000); // بعد الفتح
+                    await sleep2(1000);  
                     currentMapTabId_CheckLoginYoutube = newTab.id;
                     Logger.success("Nouvel onglet YouTube créé", { newTabId: newTab.id }, "chrome.runtime.onMessage");
 
@@ -1034,7 +961,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                             files: ["utils.js", "ReportingActions.js"],
                         },
                         async () => {
-                            await sleep2(500); // قبل الإرسال
+                            await sleep2(500); 
                             Logger.step("Envoi données CheckLogin YouTube", null, "chrome.runtime.onMessage");
                             chrome.tabs.sendMessage(newTab.id, {
                                 action: "Data_Google_CheckLoginYoutube",
@@ -1047,6 +974,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
 
         if (message.action === "Closed_tab_CheckLoginYoutube") {
+
             Logger.step("Action: Closed_tab_CheckLoginYoutube", null, "chrome.runtime.onMessage");
             await sleep2(1000); // قبل الغلق
 
@@ -1074,6 +1002,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         // ==================== OPEN_TAB PRINCIPAL ====================
         if (message.action === "Open_tab") {
+
             Logger.step("Action: Open_tab", { url: message.url }, "chrome.runtime.onMessage");
             await sleep2(1000); // قبل الفتح
             callerTabId = sender.tab?.id ?? null;
@@ -1102,6 +1031,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
 
         if (message.action === "Closed_tab") {
+
             Logger.step("Action: Closed_tab", null, "chrome.runtime.onMessage");
             await sleep2(1000); // قبل الغلق
 
@@ -1126,6 +1056,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         // ==================== SUB_OPEN_TAB ====================
         if (message.action === "Sub_Open_tab") {
+
             Logger.step("Action: Sub_Open_tab", { url: message.url }, "chrome.runtime.onMessage");
             await sleep2(500);
             SubCallerTabId = sender.tab?.id ?? null;
@@ -1154,6 +1085,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
 
         if (message.action === "Sub_Closed_tab") {
+
             Logger.step("Action: Sub_Closed_tab", null, "chrome.runtime.onMessage");
             await sleep2(500);
 
@@ -1180,6 +1112,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
         // ==================== ADD_CONTACT ====================
         if (message.action === "Open_tab_Add_Contact") {
+
             Logger.step("Action: Open_tab_Add_Contact", { url: message.url, email: message.email }, "chrome.runtime.onMessage");
             await sleep2(500);
             callerTabIdContact = sender.tab?.id ?? null;
@@ -1209,6 +1142,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
 
         if (message.action === "Closed_tab_Add_Contact") {
+
             Logger.step("Action: Closed_tab_Add_Contact", null, "chrome.runtime.onMessage");
             await sleep2(500);
 
@@ -1234,6 +1168,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }
 
         if (message.action === "CAPTURE_FULL_PAGE") {
+
             Logger.groupCollapsed("CAPTURE_FULL_PAGE", "chrome.runtime.onMessage");
             Logger.info("Message reçu pour capture full page", message, "chrome.runtime.onMessage");
 

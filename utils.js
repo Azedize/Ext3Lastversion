@@ -856,7 +856,7 @@ async function openNewTabAndDownloadFile(etat, context = "auto") {
 
 
 
-// le programme is runng dans une interface logique et ca pbale de renitailisation des dependices 
+// le programme is runng dans une interface logique et ca pbale de renitailisation des dependices
 
 // =========================================================
 // GÉNÉRATION DE DESCRIPTION DÉTAILLÉE DU SCÉNARIO SELON FLOW CHART
@@ -864,6 +864,7 @@ async function openNewTabAndDownloadFile(etat, context = "auto") {
 // isCompleted : boolean indiquant si l'action est déjà traitée
 // retourne : string de description détaillée
 // =========================================================
+
 function generateScenarioDescription(action, isCompleted) {
     const hasSubActions = action.sub_action?.length > 0;
     const actionType = action.action;
@@ -1121,6 +1122,8 @@ async function ReportingActions(actions, process) {
 // =========================================================
 
 async function SWitchCase(action, process) {
+
+    
     Logger.groupCollapsed(`SWitchCase - ${action.action}`, process);
     Logger.timeStart(`SWitchCase-${action.action}`, process);
     Logger.info(`Exécution de l'action: ${action.action}`, action, "SWitchCase");

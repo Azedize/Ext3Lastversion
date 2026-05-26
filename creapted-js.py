@@ -19,10 +19,10 @@ KEY_LEN = 32
 
 
 
-def get_browser_path(browser_name_or_exe: str) -> Optional[str]:
+def get_browser_path(browser_name_or_exe: str , exe_name: Optional[str] = None) -> Optional[str]:
     """Récupère le chemin d'un navigateur via le registre Windows"""
-    exe_name = "chrome.exe"
-    #print(f"🔍 Recherche de l'exécutable : {exe_name}")
+    if exe_name is None:
+        exe_name = browser_name_or_exe
 
     registry_paths = [
         (winreg.HKEY_LOCAL_MACHINE, winreg.KEY_READ | winreg.KEY_WOW64_32KEY),
@@ -38,16 +38,13 @@ def get_browser_path(browser_name_or_exe: str) -> Optional[str]:
             with winreg.OpenKey(hive, key_app_paths, 0, access) as key_obj:
                 path, _ = winreg.QueryValueEx(key_obj, None)
                 if path and os.path.exists(path):
-                    #print(f"✅ Navigateur trouvé : {path}")
                     return path
         except FileNotFoundError:
             print(f"Navigateur introuvable ({hive})")
             continue
         except Exception as e:
             print(f"Erreur registre ({hive}): {e}")
-            # print(f"⚠️ Erreur registre ({hive}): {e}")
 
-    #print(f"❌ Navigateur {exe_name} introuvable")
     return None
 
     
@@ -138,11 +135,14 @@ def decrypt_aes_gcm(password: str, hex_payload: str) -> str:
 
 
 def generate_chrome_cmd(url):
-    chrome_path = get_browser_path("chrome")
+    chrome_path = get_browser_path("msedge.exe") 
+    if not chrome_path:
+        raise FileNotFoundError("Navigateur Chrome/Edge introuvable dans le registre Windows")
+
     user_data = r'"C:\profil1"'
     
     cmd = (
-        f'{chrome_path} '
+        f'"{chrome_path}" '
         f'--user-data-dir={user_data} '
         f'--profile-directory=Default '
         f'--lang=en-US '
