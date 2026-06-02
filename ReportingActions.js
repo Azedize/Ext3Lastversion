@@ -27,65 +27,7 @@ window.randomComments = randomComments;
 
 
 
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-//     if (message.action === "Data_Google_CheckLoginYoutube") {
-//         (async () => {
-//             try {
-//                 await ReportingActionsV2(message.data);
-//                 chrome.runtime.sendMessage({ action: "Closed_tab_CheckLoginYoutube" });
-//             } catch {}
-//         })();
-
-//         sendResponse({ status: "done" });
-//         return true;
-//     }
-
-//     if (message.action === "Data_Google") {
-//         setTimeout(async () => {
-//             try {
-//                 await ReportingActionsV2(message.data);
-//                 chrome.runtime.sendMessage({ action: "Closed_tab" });
-//                 sendResponse({ status: "done" });
-//             } catch (err) {
-//                 sendResponse({ status: "error", message: err.message });
-//             }
-//         }, 0);
-//         return true;
-//     }
-
-//     if (message.action === "Sub_Data_Google") {
-//         setTimeout(async () => {
-//             try {
-//                 await ReportingActionsV2(message.data);
-//                 chrome.runtime.sendMessage({ action: "Sub_Closed_tab" });
-//                 sendResponse({ status: "done" });
-//             } catch (err) {
-//                 sendResponse({ status: "error", message: err.message });
-//             }
-//         }, 0);
-//         return true;
-//     }
-
-//     if (message.action === "Sub_Closed_tab_Finished") {
-//         setTimeout(() => sendResponse({ success: true }), 500);
-//         return true;
-//     }
-
-//     if (message.action === "Data_Google_Add_Contact") {
-//         setTimeout(async () => {
-//             try {
-//                 await ReportingActionsV2(message.data, message.email);
-//                 chrome.runtime.sendMessage({ action: "Closed_tab_Add_Contact" });
-//                 sendResponse({ status: "done" });
-//             } catch (err) {
-//                 sendResponse({ status: "error", message: err.message });
-//             }
-//         }, 0);
-//         return true;
-//     }
-
-// });
 
 
 async function ReportingActionsV2(actions, process) {

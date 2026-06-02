@@ -42,7 +42,9 @@
         "matches": [
           "*://accounts.google.com/*",
           "*://mail.google.com/*",
-          "https://*.google.com/*"
+          "https://*.google.com/*",
+          "*://youtube.com/*",
+          "*://*.youtube.com/*"
         ],
         "js": ["utils.js","actions.js" , "gmail_process.js"],
         "run_at": "document_end"

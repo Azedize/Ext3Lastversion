@@ -135,7 +135,7 @@ def decrypt_aes_gcm(password: str, hex_payload: str) -> str:
 
 
 def generate_chrome_cmd(url):
-    chrome_path = get_browser_path("msedge.exe") 
+    chrome_path = get_browser_path("firefox.exe" ) 
     if not chrome_path:
         raise FileNotFoundError("Navigateur Chrome/Edge introuvable dans le registre Windows")
 
