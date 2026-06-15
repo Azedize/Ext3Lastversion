@@ -11,6 +11,10 @@ const redirectUrls = [
     "https://gds.google.com/web/homeaddress",
 ];
 
+
+
+
+
 const Logger = {
     levels: {
         info: { icon: "ℹ️", method: "log", style: "color:#1a73e8; background:#e8f0fe; padding:2px 6px; border-radius:4px;" },
@@ -236,6 +240,8 @@ const Logger = {
 };
 
 
+
+
 function saveLog(message) {
     Logger.groupCollapsed("saveLog", "saveLog");
     Logger.timeStart("saveLog", "saveLog");
@@ -268,6 +274,8 @@ function saveLog(message) {
         });
     });
 }
+
+
 
 
 
@@ -654,85 +662,9 @@ async function downloadLogs(email) {
 // === Ouvrir un nouvel onglet et télécharger un fichier (session + email) ===
 // etat : état à inclure dans le nom du fichier
 // =========================================================
-// si le programme is rining dans une interface logique et capabe de renitailisation des input baki kanhsib hazito min ktaf min lkawabis wx mirtaha ya nfos lkolomi
-
-
-// async function openNewTabAndDownloadFile(etat) {
-//     Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-//     Logger.timeStart("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-
-//     try {
-//         Logger.info("Récupération de l'email depuis storage", null, "openNewTabAndDownloadFile");
-//         const email = await new Promise((resolve) => {
-//             chrome.storage.local.get("profile_email", (res) => {
-//                 resolve(res.profile_email || "Unknown");
-//             });
-//         });
-//         Logger.success("Email trouvé", email, "openNewTabAndDownloadFile");
-
-//         if (etat !== "completed") {
-//             Logger.step(`Téléchargement des logs avant ouverture du nouvel onglet (etat=${etat})`, null, "openNewTabAndDownloadFile");
-//             await downloadLogs(email);
-//         }
-
-//         Logger.step("Lecture du fichier data.txt depuis l'extension", null, "openNewTabAndDownloadFile");
-//         const dataTxtPath = chrome.runtime.getURL("data.txt");
-//         const response = await fetch(dataTxtPath);
-//         if (!response.ok) {
-//             Logger.error("Impossible de lire data.txt", { dataTxtPath, status: response.status }, "openNewTabAndDownloadFile");
-//             Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-//             Logger.groupEnd();
-//             return;
-//         }
-
-
-//         const lines = (await response.text()).split("\n").map((l) => l.trim());
-//         const session_id = lines[0];
-//         if (!session_id) {
-//             Logger.warning("session_id introuvable dans data.txt", lines, "openNewTabAndDownloadFile");
-//             Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-//             Logger.groupEnd();
-//             return;
-//         }
-//         Logger.success("session_id trouvé", session_id, "openNewTabAndDownloadFile");
-
-//         Logger.step("Nettoyage de chrome.storage.local", null, "openNewTabAndDownloadFile");
-//         await clearChromeStorageLocal();
-
-//         Logger.step("Ouverture d'un nouvel onglet vers StackOverflow", null, "openNewTabAndDownloadFile");
-//         const newTab = window.open("https://stackoverflow.com");
-//         if (!newTab) {
-//             Logger.error("Impossible d'ouvrir un nouvel onglet", null, "openNewTabAndDownloadFile");
-//             Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-//             Logger.groupEnd();
-//             return;
-//         }
-
-//         const fileContent = `session_id:${session_id}_email:${email}_etat:${etat}`;
-//         const blob = new Blob([fileContent], { type: "text/plain" });
-//         const link = document.createElement("a");
-//         link.href = URL.createObjectURL(blob);
-//         link.download = `${session_id}_${email}_${etat}.txt`;
-
-//         Logger.step("Création et déclenchement du téléchargement dans le nouvel onglet", null, "openNewTabAndDownloadFile");
-//         newTab.document.body.appendChild(link);
-//         link.click();
-//         newTab.document.body.removeChild(link);
-
-//         Logger.success("Fichier téléchargé avec succès", { session_id, email, etat }, "openNewTabAndDownloadFile");
-//     } catch (err) {
-//         Logger.error("Erreur dans openNewTabAndDownloadFile", err, "openNewTabAndDownloadFile");
-//     }
-
-//     Logger.timeEnd("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
-//     Logger.groupEnd();
-// }
-
 
 
  
-
-
 
 async function openNewTabAndDownloadFile(etat, context = "auto") {
     Logger.groupCollapsed("openNewTabAndDownloadFile", "openNewTabAndDownloadFile");
@@ -741,7 +673,6 @@ async function openNewTabAndDownloadFile(etat, context = "auto") {
 
     
     try {
-        // 🔍 Détection automatique du contexte
         if (context === "auto") {
             context = typeof window === "undefined" ? "background" : "content";
             Logger.debug("Contexte détecté automatiquement", { context }, "openNewTabAndDownloadFile");
@@ -856,7 +787,6 @@ async function openNewTabAndDownloadFile(etat, context = "auto") {
 
 
 
-// le programme is runng dans une interface logique et ca pbale de renitailisation des dependices
 
 // =========================================================
 // GÉNÉRATION DE DESCRIPTION DÉTAILLÉE DU SCÉNARIO SELON FLOW CHART
