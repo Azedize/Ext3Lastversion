@@ -1,0 +1,67 @@
+{
+  "manifest_version": 3,
+  "name": "EX3",
+  "version": "1.0.1",
+  "description": "",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "webNavigation",
+    "alarms",
+    "downloads",
+    "webRequest",
+    "webRequestAuthProvider",
+    "declarativeNetRequest",
+    "scripting",
+    "proxy",
+    "debugger"
+  ],
+  "host_permissions": [
+    "file://*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": "icons/icon3.png",
+    "default_title": "Auto login Gmail with Proxy"
+  },
+  "icons": {
+    "16": "icons/icon1.png",
+    "24": "icons/icon2.png",
+    "32": "icons/icon3.png",
+    "48": "icons/icon4.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://accounts.google.com/*",
+        "*://mail.google.com/*",
+        "https://*.google.com/*",
+        "*://youtube.com/*",
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "utils.js",
+        "actions.js",
+        "gmail_process.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data.txt",
+        "traitement.json",
+        "gmail_process.js",
+        "ReportingActions.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

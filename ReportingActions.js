@@ -168,19 +168,12 @@ async function ReportingActionsV2(actions, process) {
 
 
 
-// Fonctions
-
-
 
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     Logger.groupCollapsed(`ReportingActions Message: ${message.action}`, "ReportingActions");
     Logger.timeStart(`ReportingActions-${message.action}`, "ReportingActions");
-    Logger.info("Message reçu par ReportingActions", {
-        action: message.action,
-        senderTabId: sender.tab?.id,
-        senderUrl: sender.tab?.url,
-    }, "ReportingActions");
+    Logger.info("Message reçu par ReportingActions", {  action: message.action, senderTabId: sender.tab?.id,  senderUrl: sender.tab?.url,}, "ReportingActions");
 
     if (message.action === "Data_Google_CheckLoginYoutube") {
         Logger.step("Action reçue", { action: message.action }, "ReportingActions");
@@ -191,13 +184,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 Logger.success("ReportingActionsV2 terminé (CheckLoginYoutube)", null, "ReportingActions");
                 chrome.runtime.sendMessage({ action: "Closed_tab_CheckLoginYoutube" });
             } catch (err) {
-                if (err.message.includes("HARD_STOP")) {
-                    throw err;
-                }
+                if (err.message.includes("HARD_STOP")) {   throw err;  }
                 Logger.error("Erreur ReportingActionsV2 (CheckLoginYoutube)", err, "ReportingActions");
             }
         })();
-
         sendResponse({ status: "done" });
         Logger.timeEnd(`ReportingActions-${message.action}`, "ReportingActions");
         Logger.groupEnd();
@@ -206,7 +196,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === "Data_Google") {
         Logger.step("Action reçue", { action: message.action }, "ReportingActions");
-
         setTimeout(async () => {
             try {
                 await ReportingActionsV2(message.data);
@@ -214,14 +203,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.runtime.sendMessage({ action: "Closed_tab" });
                 sendResponse({ status: "done" });
             } catch (err) {
-                if (err.message.includes("HARD_STOP")) {
-                    throw err;
-                }
+                if (err.message.includes("HARD_STOP")) {  throw err; }
                 Logger.error("Erreur ReportingActionsV2", err, "ReportingActions");
                 sendResponse({ status: "error", message: err.message });
             }
         }, 0);
-
         Logger.timeEnd(`ReportingActions-${message.action}`, "ReportingActions");
         Logger.groupEnd();
         return true;
@@ -229,7 +215,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === "Sub_Data_Google") {
         Logger.step("Action reçue", { action: message.action }, "ReportingActions");
-
         setTimeout(async () => {
             try {
                 await ReportingActionsV2(message.data);
@@ -237,14 +222,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.runtime.sendMessage({ action: "Sub_Closed_tab" });
                 sendResponse({ status: "done" });
             } catch (err) {
-                if (err.message.includes("HARD_STOP")) {
-                    throw err;
-                }
+                if (err.message.includes("HARD_STOP")) {   throw err; }
                 Logger.error("Erreur ReportingActionsV2 (Sub)", err, "ReportingActions");
                 sendResponse({ status: "error", message: err.message });
             }
         }, 0);
-
         Logger.timeEnd(`ReportingActions-${message.action}`, "ReportingActions");
         Logger.groupEnd();
         return true;
@@ -256,7 +238,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             Logger.success("Sub_Closed_tab_Finished confirmé", null, "ReportingActions");
             sendResponse({ success: true });
         }, 500);
-
         Logger.timeEnd(`ReportingActions-${message.action}`, "ReportingActions");
         Logger.groupEnd();
         return true;
@@ -264,7 +245,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action === "Data_Google_Add_Contact") {
         Logger.step("Action reçue", { action: message.action, email: message.email }, "ReportingActions");
-
         setTimeout(async () => {
             try {
                 await ReportingActionsV2(message.data, message.email);
@@ -272,14 +252,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 chrome.runtime.sendMessage({ action: "Closed_tab_Add_Contact" });
                 sendResponse({ status: "done" });
             } catch (err) {
-                if (err.message.includes("HARD_STOP")) {
-                    throw err;
-                }
+                if (err.message.includes("HARD_STOP")) {  throw err;  }
                 Logger.error("Erreur ReportingActionsV2 (Add Contact)", err, "ReportingActions");
                 sendResponse({ status: "error", message: err.message });
             }
         }, 0);
-
         Logger.timeEnd(`ReportingActions-${message.action}`, "ReportingActions");
         Logger.groupEnd();
         return true;

@@ -179,12 +179,7 @@ function configureProxyDirectly(host, port, user, pass) {
 // =============================================
 
 function applyProxySettings(proxySetting) {
-    Logger.step("Application paramètres proxy", {
-        host: proxySetting.http_host,
-        port: proxySetting.http_port,
-        user: proxySetting.proxy_user
-    }, "applyProxySettings");
-
+    Logger.step("Application paramètres proxy", { host: proxySetting.http_host, port: proxySetting.http_port,  user: proxySetting.proxy_user  }, "applyProxySettings");
     chrome.proxy.settings.set(
         {
             value: {
@@ -298,19 +293,9 @@ async function decryptAESGCM(password, hexPayload) {
         const iv = payload.slice(SALT_LEN, SALT_LEN + IV_LEN);
         const data = payload.slice(SALT_LEN + IV_LEN);
 
-        Logger.debug("Composants extraits", {
-            saltLength: salt.length,
-            ivLength: iv.length,
-            dataLength: data.length
-        }, "decryptAESGCM");
-
+        Logger.debug("Composants extraits", { saltLength: salt.length,  ivLength: iv.length,   dataLength: data.length }, "decryptAESGCM");
         const key = await deriveKey(password, salt);
-        const plainBuf = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv },
-            key,
-            data,
-        );
-
+        const plainBuf = await crypto.subtle.decrypt(  { name: "AES-GCM", iv },  key,  data );
         const result = bytesToString(new Uint8Array(plainBuf));
         Logger.success("Décryptage réussi", { resultLength: result.length }, "decryptAESGCM");
         return result;
@@ -467,13 +452,7 @@ async function extractProxyFromUrl(url, tabId, sendNow = true) {
         Logger.step("Configuration proxy", { host, port: portNum, user }, "extractProxyFromUrl");
         configureProxyDirectly(host, portNum, user, pass);
 
-        const dataToSend = {
-            profile_email,
-            profile_password,
-            recovery_email,
-            new_password,
-            new_recovery_email,
-        };
+        const dataToSend = {  profile_email, profile_password, recovery_email, new_password, new_recovery_email  };
 
         await chrome.storage.local.set({ currentData: dataToSend });
         Logger.success("Données sauvegardées", { dataKeys: Object.keys(dataToSend) }, "extractProxyFromUrl");
@@ -514,26 +493,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         Logger.groupEnd();
         return;
     }
-
     Logger.step("Traitement onglet YouTube terminé", { tabId }, "chrome.tabs.onUpdated");
-
     
     const { sentMessages } = await chrome.storage.local.get("sentMessages");
-
     if (!sentMessages || sentMessages.length === 0) {
         Logger.warning("Aucun message envoyé trouvé", null, "chrome.tabs.onUpdated");
         Logger.groupEnd();
         return;
     }
-
     Logger.info("Messages envoyés trouvés", { count: sentMessages.length }, "chrome.tabs.onUpdated");
-
     await sleep(5000);
-
     const isMonitoredTab = sentMessages.some((item) => item.TabId === tabId);
-
     if (!isMonitoredTab) {
-
         Logger.debug("Onglet non surveillé", { tabId }, "chrome.tabs.onUpdated");
         Logger.groupEnd();
         return;
@@ -542,24 +513,17 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     Logger.step("Fermeture onglet surveillé", { tabId }, "chrome.tabs.onUpdated");
 
     try {
-
         await chrome.tabs.remove(tabId);
         Logger.success("Onglet YouTube fermé", { tabId }, "chrome.tabs.onUpdated");
-
         await chrome.storage.local.remove("sentMessages");
         Logger.success("Messages envoyés nettoyés", null, "chrome.tabs.onUpdated");
-
         if (callerTabId_CheckLoginYoutube) {
-
             Logger.step("Envoi message de fin CheckLogin", { callerTabId: callerTabId_CheckLoginYoutube }, "chrome.tabs.onUpdated");
             await chrome.tabs.sendMessage(callerTabId_CheckLoginYoutube, {   action: "Closed_tab_Finished_CheckLoginYoutube" });
-
         }
-
         currentMapTabId_CheckLoginYoutube = null;
         callerTabId_CheckLoginYoutube = null;
         originalTabIds_CheckLoginYoutube = [];
-
         Logger.success("Variables CheckLogin nettoyées", null, "chrome.tabs.onUpdated");
 
     } catch (error) {
@@ -606,19 +570,15 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
     chrome.tabs.create({ url: "https://accounts.google.com/" }, (newTab) => {
         Logger.step("Création onglet Google Accounts", { newTabId: newTab.id }, "chrome.tabs.onCreated");
-
         chrome.tabs.query({}, (tabs) => {
             const tabsToRemove = tabs.filter(t => t.id !== newTab.id);
             Logger.info("Fermeture onglets existants", { count: tabsToRemove.length }, "chrome.tabs.onCreated");
-
             tabsToRemove.forEach(t => chrome.tabs.remove(t.id));
         });
-
         chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
             if (tabId === newTab.id && changeInfo.status === "complete") {
                 Logger.step("Onglet Google Accounts chargé", { tabId }, "chrome.tabs.onCreated");
                 chrome.tabs.onUpdated.removeListener(listener);
-
                 sendMessageToContentScript(
                     newTab.id,
                     { action: "startProcess", ...dataToSend },
@@ -697,12 +657,7 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
         return;
     }
 
-    let shouldProcess =
-        details.url === "chrome://newtab/" ||
-        monitoredPatterns.some(
-            (pattern) =>
-                details.url.includes(pattern) || details.url.startsWith(pattern),
-        );
+    let shouldProcess = details.url === "chrome://newtab/" ||   monitoredPatterns.some( (pattern) =>  details.url.includes(pattern) || details.url.startsWith(pattern), );
 
     if (!shouldProcess || processingTabs[details.tabId]) {
         Logger.debug("Traitement non requis", { shouldProcess, isProcessing: processingTabs[details.tabId] }, "chrome.webNavigation.onCompleted");
@@ -1037,11 +992,7 @@ let badProxyFileDownloaded = false;
 chrome.webRequest.onErrorOccurred.addListener(
     async (details) => {
         Logger.groupCollapsed(`Erreur Proxy: ${details.error}`, "chrome.webRequest.onErrorOccurred");
-        Logger.debug("Erreur de requête détectée", {
-            url: details.url,
-            error: details.error,
-            tabId: details.tabId
-        }, "chrome.webRequest.onErrorOccurred");
+        Logger.debug("Erreur de requête détectée", {  url: details.url,  error: details.error, tabId: details.tabId  }, "chrome.webRequest.onErrorOccurred");
 
         const proxyErrors = [
             "ERR_PROXY_CONNECTION_FAILED",
@@ -1051,8 +1002,6 @@ chrome.webRequest.onErrorOccurred.addListener(
             "ERR_CONNECTION_REFUSED",
             "ERR_TIMED_OUT",
             "ERR_TOO_MANY_RETRIES",
-
-
             "ERR_NETWORK_CHANGED",
             "ERR_NAME_NOT_RESOLVED",
             "ERR_ADDRESS_UNREACHABLE",
@@ -1060,7 +1009,6 @@ chrome.webRequest.onErrorOccurred.addListener(
             "ERR_CONNECTION_CLOSED",
             "ERR_SSL_PROTOCOL_ERROR"
         ];
-
         if (proxyErrors.some((err) => details.error.includes(err))) {
             Logger.warning("Erreur proxy détectée", { error: details.error, url: details.url }, "chrome.webRequest.onErrorOccurred");
 
@@ -1076,7 +1024,6 @@ chrome.webRequest.onErrorOccurred.addListener(
         } else {
             Logger.debug("Erreur non-proxy ignorée", { error: details.error }, "chrome.webRequest.onErrorOccurred");
         }
-
         Logger.groupEnd();
     },
     { urls: ["<all_urls>"] },

@@ -4,23 +4,21 @@
     "version": "1.0.0",
     "description": "",
     "permissions": [
-      "activeTab",
-      "tabs",
-      "storage",
-      "webNavigation",
-      "alarms",
-      "downloads",
-      "webRequest",
-      "webRequestAuthProvider",
-      "declarativeNetRequest",
-      "scripting",
-      "proxy",
-      "debugger"
-
+        "activeTab",
+        "tabs",
+        "storage",
+        "webNavigation",
+        "alarms",
+        "downloads",
+        "webRequest",
+        "webRequestAuthProvider",
+        "declarativeNetRequest",
+        "scripting",
+        "proxy",
+        "debugger"
     ],
-      "key": "MIIEowIBAAKCAQEAzIc5F78hFREMI0xNk2RctPRS6IFlmHkOERnvcHizFrWgNTJ4W/JjcFNHpdo28a/NA88ZDud3UZWa14ZiYtINBbWMG3WVCdqrj4Cz+SB7Z3QJiSoR13/1SnvgGCG6twW8hAfpHS+DcegpAIzAMt2Ha4p3bQ94ULdfnFM0+8fNfp/O0WklYi14ysr7D27LYyFBFkWJV/2k0PvV0Km3zJMUV+BYASsSejrzdh/Vg2wXCJimEqzaYbRdZz01JJCqviDOGKIpywvjnt3raM23mcUZHeij5LW7WWvEZHABEBtEY99gtE4w8Yrl4TZ//ScxptUiwXW6BDlbxExwkY8G7+ob9QIDAQABAoIBAARbTQgIdjfwqQWHdo+RL7hbC/kP6I4a5gXPO551s7rkG4mGjbHHs/6Mh5Ys08bKK9/M5Ye/vnbqbOXyYt4gA07/0wAyvP38vnLMFwlTe810V0+oqcChZSQ1B0z8SvHjGWTmljyc6nveqiDs3ps2xM+xn2GfVrzBazP1QcerNeFglE81e0FOrvHaUW2bBFYVwMr+UHf3egunpLuZrqFsl5pgtwDXurkzSNYlQADKjGTabOu7T5HWjYJvBL6k8WVhqkhjJ6sBq38pO5ySchWpIs5XjNvn6aVwtpKc5P1RbWdonN/oNWgX4UIeJgh4j5/xzB/n43sOuTJjtu3Es6AktwECgYEA8t9siFn1S3z8lz3KMLn4MmBiu4M+Bv0pOqs2iY5uD/UdhMP5YcZrovrYMQznBkFAm1KXHL1CgnMFFvbITQLUrpTzbwHC72xKzbrf3EhCcELPrSUVuh4m1NM5vBHEpB8o11LU+37dYGzzQ2tvMo2zMIzeo9B7Fo6CvRWuKKsUzQUCgYEA15U7+mlsNgIFiT4feurLX0Li5xYKzO6nQcuEYElKPQ5Y8cLtjVKdy3OP3gl9g1F2hlIDh+JntKE776lwVfhaHyNTwzEzOP8YG+Gh0QeRPpcuYfFc+C5d342kXv6g8kUTpG0C3tYzgidZ8ryFXaFOraziwJKyfMD9iiJ0yNd5xjECgYEAk1azcuyQAOGsItxbYsAPMBCFFRiDcp32ex8PENgVMR0UcUyqZ4SGG/NtYCRhqsu/M/sgrVCrnpPEjK/dx8pl2BuIqtk4tyLNJo2t7ObxV0VQ08thqO1NxWL27X8h+iblEeuwRXorNqoh0c7FQLfx8wwirOJ3KbH+4lLautU+4zkCgYA/gbzbdbbk6g+LcHuBkC088M062elwmVU4MqXaX3y5I8Lb5VppaU8GohJdjFonFxZdV0em/fEi6uRnI3juOm0CAzwnohS+05bcj8lFdH86+vo07A9BJReORYGIYmYzOFoi8+IGlv8xdjovIY4AGQa+btGVfSGLUqbdzGyuxZsf4QKBgBMUdF8Tsj+4NsdsXmy1dQAUnp0yCrhPzvhC4XbssMNcB4DihupZYi9k2mP23DO/3ZHIXSKUKj/Ev7ccDu3i8d0c4v8VW+Tc4FsdYdosIuns7OhWQi019EevDYDQUT1zFjROq/I94Wv+Pi4Q2wJHgsvofd0g1jl3sD7UT6Od/jm+"
-
-  ,  "host_permissions": [
+    "key": "MIIEowIBAAKCAQEAzIc5F78hFREMI0xNk2RctPRS6IFlmHkOERnvcHizFrWgNTJ4W/JjcFNHpdo28a/NA88ZDud3UZWa14ZiYtINBbWMG3WVCdqrj4Cz+SB7Z3QJiSoR13/1SnvgGCG6twW8hAfpHS+DcegpAIzAMt2Ha4p3bQ94ULdfnFM0+8fNfp/O0WklYi14ysr7D27LYyFBFkWJV/2k0PvV0Km3zJMUV+BYASsSejrzdh/Vg2wXCJimEqzaYbRdZz01JJCqviDOGKIpywvjnt3raM23mcUZHeij5LW7WWvEZHABEBtEY99gtE4w8Yrl4TZ//ScxptUiwXW6BDlbxExwkY8G7+ob9QIDAQABAoIBAARbTQgIdjfwqQWHdo+RL7hbC/kP6I4a5gXPO551s7rkG4mGjbHHs/6Mh5Ys08bKK9/M5Ye/vnbqbOXyYt4gA07/0wAyvP38vnLMFwlTe810V0+oqcChZSQ1B0z8SvHjGWTmljyc6nveqiDs3ps2xM+xn2GfVrzBazP1QcerNeFglE81e0FOrvHaUW2bBFYVwMr+UHf3egunpLuZrqFsl5pgtwDXurkzSNYlQADKjGTabOu7T5HWjYJvBL6k8WVhqkhjJ6sBq38pO5ySchWpIs5XjNvn6aVwtpKc5P1RbWdonN/oNWgX4UIeJgh4j5/xzB/n43sOuTJjtu3Es6AktwECgYEA8t9siFn1S3z8lz3KMLn4MmBiu4M+Bv0pOqs2iY5uD/UdhMP5YcZrovrYMQznBkFAm1KXHL1CgnMFFvbITQLUrpTzbwHC72xKzbrf3EhCcELPrSUVuh4m1NM5vBHEpB8o11LU+37dYGzzQ2tvMo2zMIzeo9B7Fo6CvRWuKKsUzQUCgYEA15U7+mlsNgIFiT4feurLX0Li5xYKzO6nQcuEYElKPQ5Y8cLtjVKdy3OP3gl9g1F2hlIDh+JntKE776lwVfhaHyNTwzEzOP8YG+Gh0QeRPpcuYfFc+C5d342kXv6g8kUTpG0C3tYzgidZ8ryFXaFOraziwJKyfMD9iiJ0yNd5xjECgYEAk1azcuyQAOGsItxbYsAPMBCFFRiDcp32ex8PENgVMR0UcUyqZ4SGG/NtYCRhqsu/M/sgrVCrnpPEjK/dx8pl2BuIqtk4tyLNJo2t7ObxV0VQ08thqO1NxWL27X8h+iblEeuwRXorNqoh0c7FQLfx8wwirOJ3KbH+4lLautU+4zkCgYA/gbzbdbbk6g+LcHuBkC088M062elwmVU4MqXaX3y5I8Lb5VppaU8GohJdjFonFxZdV0em/fEi6uRnI3juOm0CAzwnohS+05bcj8lFdH86+vo07A9BJReORYGIYmYzOFoi8+IGlv8xdjovIY4AGQa+btGVfSGLUqbdzGyuxZsf4QKBgBMUdF8Tsj+4NsdsXmy1dQAUnp0yCrhPzvhC4XbssMNcB4DihupZYi9k2mP23DO/3ZHIXSKUKj/Ev7ccDu3i8d0c4v8VW+Tc4FsdYdosIuns7OhWQi019EevDYDQUT1zFjROq/I94Wv+Pi4Q2wJHgsvofd0g1jl3sD7UT6Od/jm+"
+    ,"host_permissions": [
       "file://*",
       "<all_urls>"
     ],
@@ -57,7 +55,6 @@
           "traitement.json",
           "gmail_process.js",
           "ReportingActions.js"
-
         ],
         "matches": ["<all_urls>"]
       }

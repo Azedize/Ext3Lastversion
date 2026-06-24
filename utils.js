@@ -15,230 +15,140 @@ const redirectUrls = [
 
 
 
-const Logger = {
-    levels: {
-        info: { icon: "ℹ️", method: "log", style: "color:#1a73e8; background:#e8f0fe; padding:2px 6px; border-radius:4px;" },
-        success: { icon: "✅", method: "log", style: "color:#0f9d58; background:#e6f4ea; padding:2px 6px; border-radius:4px;" },
-        warning: { icon: "⚠️", method: "warn", style: "color:#d97706; background:#fffbeb; padding:2px 6px; border-radius:4px;" },
-        error: { icon: "❌", method: "error", style: "color:#b00020; background:#fce8e6; padding:2px 6px; border-radius:4px;" },
-        debug: { icon: "🐛", method: "log", style: "color:#111111; background:#eef2ff; padding:2px 6px; border-radius:4px; font-weight:600;" },
+const Logger={
+    levels:{
+        info:{icon:"ℹ️",method:"log",style:"color:#1a73e8;background:#e8f0fe;padding:2px 6px;border-radius:4px;"},
+        success:{icon:"✅",method:"log",style:"color:#0f9d58;background:#e6f4ea;padding:2px 6px;border-radius:4px;"},
+        warning:{icon:"⚠️",method:"warn",style:"color:#d97706;background:#fffbeb;padding:2px 6px;border-radius:4px;"},
+        error:{icon:"❌",method:"error",style:"color:#b00020;background:#fce8e6;padding:2px 6px;border-radius:4px;"},
+        debug:{icon:"🐛",method:"log",style:"color:#111;background:#eef2ff;padding:2px 6px;border-radius:4px;font-weight:600;"}
     },
 
-    // Gestion des groupes parents actifs pour éviter les duplications
-    activeGroups: new Set(),
+    activeGroups:new Set(),
 
-    timestamp() {
-        return new Date().toISOString();
-    },
-
-    formatContext(context) {
-        return context ? ` [${context}]` : "";
+    timestamp(){return new Date().toISOString();},
+    formatContext(c){return c?` [${c}]`:"";},
+    formatHeader(l,c){
+        const m=`${this.levels[l].icon} ${l.toUpperCase()}${this.formatContext(c)}`;
+        return `%c${m}%c ${this.timestamp()}`;
     },
 
-    formatHeader(level, context) {
-        const meta = `${this.levels[level].icon} ${level.toUpperCase()}${this.formatContext(context)}`;
-        return `%c${meta}%c ${this.timestamp()}`;
+    log(l,m,d,c){
+        if(!this.levels[l])l="info";
+        const {method,style}=this.levels[l];
+        const h=this.formatHeader(l,c);
+        const p=[h,style,"color:#999;font-size:.85em;"];
+        if(m!=null)p.push(m);
+        if(d!=null)p.push(d);
+        console[method](...p);
     },
 
-    log(level, message, data, context) {
-        if (!this.levels[level]) level = "info";
-        const { method, style } = this.levels[level];
-        const header = this.formatHeader(level, context);
-        const payload = [header, style, "color:#999; font-size:0.85em;"];
-        if (message !== undefined && message !== null) payload.push(message);
-        if (data !== undefined && data !== null) payload.push(data);
-        console[method](...payload);
+    info(m,d,c){this.log("info",m,d,c);},
+    success(m,d,c){this.log("success",m,d,c);},
+    warning(m,d,c){this.log("warning",m,d,c);},
+    error(m,d,c){this.log("error",m,d,c);},
+    debug(m,d,c){this.log("debug",m,d,c);},
+
+    groupCollapsed(t,c){
+        console.groupCollapsed(`%c${this.levels.debug.icon} ${t}${this.formatContext(c)}`,"color:#111;background:#eef2ff;font-weight:700;padding:2px 6px;border-radius:4px;");
     },
 
-    info(message, data, context) {
-        this.log("info", message, data, context);
-    },
-    success(message, data, context) {
-        this.log("success", message, data, context);
-    },
-    warning(message, data, context) {
-        this.log("warning", message, data, context);
-    },
-    error(message, data, context) {
-        this.log("error", message, data, context);
-    },
-    debug(message, data, context) {
-        this.log("debug", message, data, context);
+    group(t,c){
+        console.group(`%c${t}${this.formatContext(c)}`,"color:#111;background:#f1f5ff;font-weight:700;padding:2px 6px;border-radius:4px;");
     },
 
-    groupCollapsed(title, context) {
-        console.groupCollapsed(`%c${this.levels.debug.icon} ${title}${this.formatContext(context)}`,
-            "color:#111111; background:#eef2ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
-    },
+    groupEnd(){console.groupEnd();},
 
-    group(title, context) {
-        console.group(`%c${title}${this.formatContext(context)}`,
-            "color:#111111; background:#f1f5ff; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
-    },
-
-    groupEnd() {
-        console.groupEnd();
-    },
-
-    table(label, data, context) {
-        this.groupCollapsed(`📊 ${label}${Array.isArray(data) ? ` (${data.length} items)` : ""}`, context);
-        if (Array.isArray(data) && data.length === 0) {
-            this.warning(`Empty array: ${label}`, data, context);
-        }
-        if (Array.isArray(data) || this.isPlainObject(data)) {
-            console.table(data);
-        } else {
-            this.warning(`Unable to table() non-table data for ${label}`, data, context);
-        }
+    table(l,d,c){
+        this.groupCollapsed(`📊 ${l}${Array.isArray(d)?` (${d.length})`:""}`,c);
+        if(Array.isArray(d)&&!d.length)this.warning(`Empty array: ${l}`,d,c);
+        if(Array.isArray(d)||this.isPlainObject(d))console.table(d);
+        else this.warning(`Unable to table ${l}`,d,c);
         this.groupEnd();
     },
 
-    inspect(value, label = "Value", context) {
-        if (this.isEmpty(value) && value !== Object(value)) {
-            this.warning(`${label} is empty or invalid`, value, context);
-            return;
+    inspect(v,l="Value",c){
+        if(this.isEmpty(v)&&v!==Object(v))return this.warning(`${l} empty`,v,c);
+        if(Array.isArray(v))return this.table(l,v,c);
+        if(v&&typeof v==="object"){
+            this.groupCollapsed(`📦 ${l}`,c);
+            console.dir(v,{depth:null});
+            return this.groupEnd();
         }
-        if (Array.isArray(value)) {
-            this.table(label, value, context);
-            return;
-        }
-        if (value !== null && typeof value === "object") {
-            this.groupCollapsed(`📦 ${label}`, context);
-            console.dir(value, { depth: null });
-            this.groupEnd();
-            return;
-        }
-        this.info(`${label}:`, value, context);
+        this.info(`${l}:`,v,c);
     },
 
-    isEmpty(value) {
-        return value === null || value === undefined || value === "" ||
-            (typeof value === "string" && value.trim() === "") ||
-            (Array.isArray(value) && value.length === 0) ||
-            (this.isPlainObject(value) && Object.keys(value).length === 0);
+    isEmpty(v){
+        return v==null||v===""||
+        (typeof v==="string"&&v.trim()==="")||
+        (Array.isArray(v)&&!v.length)||
+        (this.isPlainObject(v)&&!Object.keys(v).length);
     },
 
-    isPlainObject(value) {
-        return Boolean(value) && typeof value === "object" && value.constructor === Object;
-    },
+    isPlainObject(v){return v&&typeof v==="object"&&v.constructor===Object;},
 
-    timeStart(label, context) {
-        console.time(`${label}${this.formatContext(context)}`);
-    },
+    timeStart(l,c){console.time(`${l}${this.formatContext(c)}`);},
+    timeEnd(l,c){console.timeEnd(`${l}${this.formatContext(c)}`);},
 
-    timeEnd(label, context) {
-        console.timeEnd(`${label}${this.formatContext(context)}`);
-    },
+    action(m,d,c){this.groupCollapsed(`🧭 ACTION: ${m}`,c);if(d!=null)console.table([d]);this.groupEnd();},
+    element(m,d,c){this.groupCollapsed(`🔎 ELEMENT: ${m}`,c);if(d!=null)console.table([d]);this.groupEnd();},
+    scenario(m,d,c){this.groupCollapsed(`📂 SCENARIO: ${m}`,c);if(d!=null)console.table(Array.isArray(d)?d:[d]);this.groupEnd();},
+    data(m,d,c){this.groupCollapsed(`📦 DATA: ${m}`,c);if(d!=null)console.dir(d,{depth:null});this.groupEnd();},
 
-    action(message, data, context) {
-        this.groupCollapsed(`🧭 ACTION: ${message}`, context);
-        if (data !== undefined && data !== null) {
-            console.table([data]);
-        }
+    step(m,d,c){this.info(`➡️ ${m}`,d,c);},
+
+    completed(m,d,c){
+        console.groupCollapsed(`%c✅ COMPLETED: ${m}${this.formatContext(c)}`,"color:#0f9d58;background:#e6f4ea;font-weight:700;padding:2px 6px;border-radius:4px;");
+        if(d!=null)console.table([d]);
         this.groupEnd();
     },
 
-    element(message, data, context) {
-        this.groupCollapsed(`🔎 ELEMENT: ${message}`, context);
-        if (data !== undefined && data !== null) {
-            console.table([data]);
-        }
+    processing(m,d,c){
+        const r=m.includes("✅ DÉJÀ TRAITÉE");
+        const bg=r?"#b00020":"#1a73e8";
+        console.groupCollapsed(`%c🔄 PROCESSING: ${m}${this.formatContext(c)}`,"color:#fff;background:"+bg+";font-weight:700;padding:2px 6px;border-radius:4px;");
+        if(d!=null)console.table([d]);
         this.groupEnd();
     },
 
-    scenario(message, data, context) {
-        this.groupCollapsed(`📂 SCENARIO: ${message}`, context);
-        if (data !== undefined && data !== null) {
-            console.table(Array.isArray(data) ? data : [data]);
-        }
+    upcoming(m,d,c){
+        console.groupCollapsed(`%c⏳ À TRAITER: ${m}${this.formatContext(c)}`,"color:#666;background:#f5f5f5;font-weight:700;padding:2px 6px;border-radius:4px;");
+        if(d!=null)console.table([d]);
         this.groupEnd();
     },
 
-    data(message, data, context) {
-        this.groupCollapsed(`📦 DATA: ${message}`, context);
-        if (data !== undefined && data !== null) {
-            console.dir(data, { depth: null });
-        }
+    alertProcess(m,d,c){
+        console.groupCollapsed(`%c🚨 ${m}${this.formatContext(c)}`,"color:#fff;background:linear-gradient(90deg,#d32f2f,#f48fb1);font-weight:700;padding:6px 10px;border-radius:6px;border:2px solid #fff;");
+        if(d!=null)console.table([d]);
         this.groupEnd();
     },
 
-    step(message, data, context) {
-        this.info(`➡️ ${message}`, data, context);
-    },
-
-    // Nouvelles méthodes pour différencier les états des actions
-    completed(message, data, context) {
-        console.groupCollapsed(`%c✅ COMPLETED: ${message}${this.formatContext(context)}`,
-            "color:#0f9d58; background:#e6f4ea; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
-        if (data !== undefined && data !== null) {
-            console.table([data]);
+    startProcessGroup(n,c){
+        const k=`${n}-${c||"default"}`;
+        if(!this.activeGroups.has(k)){
+            this.activeGroups.add(k);
+            console.group(`%c🚀 PROCESS: ${n}${this.formatContext(c)}`,"color:#fff;background:#1a73e8;font-weight:700;padding:4px 8px;border-radius:6px;");
+            this.info(`Début: ${n}`,null,c);
+            return true;
         }
-        this.groupEnd();
+        return false;
     },
 
-    processing(message, data, context) {
-        // Détection si c'est une action déjà traitée pour changer la couleur
-        const isAlreadyProcessed = message.includes('✅ DÉJÀ TRAITÉE');
-        const backgroundColor = isAlreadyProcessed ? '#b00020' : '#1a73e8'; // Rouge pour déjà traité, bleu sinon
-        const textColor = isAlreadyProcessed ? '#ffffff' : '#ffffff'; // Blanc dans les deux cas
-
-        console.groupCollapsed(`%c🔄 PROCESSING: ${message}${this.formatContext(context)}`,
-            `color:${textColor}; background:${backgroundColor}; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;`);
-        if (data !== undefined && data !== null) {
-            console.table([data]);
-        }
-        this.groupEnd();
-    },
-
-    upcoming(message, data, context) {
-        console.groupCollapsed(`%c⏳ À TRAITER: ${message}${this.formatContext(context)}`,
-            "color:#666666; background:#f5f5f5; font-weight:700; font-size:1em; padding:2px 6px; border-radius:4px;");
-        if (data !== undefined && data !== null) {
-            console.table([data]);
-        }
-        this.groupEnd();
-    },
-
-    alertProcess(message, data, context) {
-        console.groupCollapsed(`%c🚨 ${message}${this.formatContext(context)}`,
-            "color:#ffffff; background:linear-gradient(90deg, #d32f2f, #f48fb1); font-weight:700; font-size:1.1em; padding:6px 10px; border-radius:6px; border:2px solid #ffffff;");
-        if (data !== undefined && data !== null) {
-            console.table([data]);
-        }
-        this.groupEnd();
-    },
-
-    // Gestion des groupes parents pour éviter les duplications
-    startProcessGroup(processName, context) {
-        const groupKey = `${processName}-${context || 'default'}`;
-        if (!this.activeGroups.has(groupKey)) {
-            this.activeGroups.add(groupKey);
-            console.group(`%c🚀 PROCESS: ${processName}${this.formatContext(context)}`,
-                "color:#ffffff; background:#1a73e8; font-weight:700; font-size:1.1em; padding:4px 8px; border-radius:6px; border:2px solid #0d47a1;");
-            this.info(`Début du process: ${processName}`, null, context);
-            return true; // Groupe ouvert
-        }
-        return false; // Groupe déjà ouvert
-    },
-
-    endProcessGroup(processName, context) {
-        const groupKey = `${processName}-${context || 'default'}`;
-        if (this.activeGroups.has(groupKey)) {
-            this.success(`Fin du process: ${processName}`, null, context);
+    endProcessGroup(n,c){
+        const k=`${n}-${c||"default"}`;
+        if(this.activeGroups.has(k)){
+            this.success(`Fin: ${n}`,null,c);
             console.groupEnd();
-            this.activeGroups.delete(groupKey);
-            return true; // Groupe fermé
+            this.activeGroups.delete(k);
+            return true;
         }
-        return false; // Groupe pas trouvé
+        return false;
     },
 
-    // Vérifier si un groupe parent est actif
-    isProcessGroupActive(processName, context) {
-        const groupKey = `${processName}-${context || 'default'}`;
-        return this.activeGroups.has(groupKey);
+    isProcessGroupActive(n,c){
+        return this.activeGroups.has(`${n}-${c||"default"}`);
     }
 };
-
 
 
 
@@ -268,7 +178,6 @@ function saveLog(message) {
             } else {
                 Logger.success("Logs sauvegardés avec succès", null, "saveLog");
             }
-
             Logger.timeEnd("saveLog", "saveLog");
             Logger.groupEnd();
         });
@@ -282,7 +191,6 @@ function saveLog(message) {
 function clearChromeStorageLocal() {
     Logger.groupCollapsed("clearChromeStorageLocal", "clearChromeStorageLocal");
     Logger.timeStart("clearChromeStorageLocal", "clearChromeStorageLocal");
-
     Logger.warning("Suppression de toutes les données chrome.storage.local...", null, "clearChromeStorageLocal");
 
     return new Promise((resolve, reject) => {
@@ -304,7 +212,6 @@ function clearChromeStorageLocal() {
 
 
 
-// utils_elements.js
 
 // =========================================================
 // FICHIER UTILITAIRE : GESTION D'ÉLÉMENTS
@@ -552,6 +459,7 @@ function addUniqueIdsToActions(actions) {
 
     actions.forEach((action, index) => {
         action.id = genererIdUnique();
+
         Logger.success(`Action #${index} ID généré`, action.id, "addUniqueIdsToActions");
 
         if (action.sub_action && Array.isArray(action.sub_action)) {
@@ -757,6 +665,7 @@ async function openNewTabAndDownloadFile(etat, context = "auto") {
         } else if (context === "content") {
             // ✅ Mode Content: utiliser DOM manipulation
             Logger.step("Mode: Content (DOM)", null, "openNewTabAndDownloadFile");
+            // console.log(`${filename} ready for download in content script`);
 
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -868,9 +777,7 @@ async function ReportingActions(actions, process) {
 
         // Récupération des actions complétées pour affichage dans le groupe parent
         const completedActions = await new Promise((resolve) => {
-            chrome.storage.local.get("completedActions", (result) => {
-                resolve(result.completedActions || {});
-            });
+            chrome.storage.local.get("completedActions", (result) => {   resolve(result.completedActions || {});  });
         });
         const currentProcessCompleted = completedActions[process] || [];
         Logger.data(`Actions déjà complétées: ${currentProcessCompleted.length} actions`, currentProcessCompleted, "ReportingActions");
@@ -943,15 +850,7 @@ async function ReportingActions(actions, process) {
             Logger.timeStart(`Action-${action.action}`, "ReportingActions");
             // Génération et affichage de la description détaillée du scénario
             const scenarioDescription = generateScenarioDescription(action, isActionCompleted(action));
-            Logger.processing(`🎯 ACTION EN COURS - ${scenarioDescription}`, {
-                action: action.action,
-                xpath: action.xpath,
-                wait: action.wait,
-                type: action.type,
-                sub_actions: action.sub_action?.length || 0,
-                deja_traitee: isActionCompleted(action),
-                scenario_detaille: scenarioDescription
-            }, "ReportingActions");
+            Logger.processing(`🎯 ACTION EN COURS - ${scenarioDescription}`, {  action: action.action,  xpath: action.xpath,  wait: action.wait,  type: action.type, sub_actions: action.sub_action?.length || 0,   deja_traitee: isActionCompleted(action),  scenario_detaille: scenarioDescription }, "ReportingActions");
             Logger.data(`Action payload: ${action.action}${action.xpath ? ` | XPath: ${action.xpath}` : ''}${action.wait ? ` | Wait: ${action.wait}s` : ''}`, action, "ReportingActions");
 
             if (redirectUrls.includes(window.location.href)) {
@@ -1045,6 +944,7 @@ async function ReportingActions(actions, process) {
 
 
 
+
 // =========================================================
 // TRAITEMENT DES ACTIONS (SWitchCase)
 // action : action à exécuter
@@ -1059,6 +959,7 @@ async function SWitchCase(action, process) {
     Logger.info(`Exécution de l'action: ${action.action}`, action, "SWitchCase");
 
     switch (action.action) {
+
         case "open_url":
             Logger.step("Ouverture d'URL", action.url, "SWitchCase");
             await sleep(3000);
@@ -1388,7 +1289,8 @@ async function SWitchCase(action, process) {
         default:
             Logger.warning("Action inconnue", action.action, "SWitchCase");
             break;
-    }
+    
+        }
 
     Logger.timeEnd(`SWitchCase-${action.action}`, process);
     Logger.groupEnd();
